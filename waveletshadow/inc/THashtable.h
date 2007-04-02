@@ -24,4 +24,4 @@ class TStringHasher : public stdext::hash_compare <std::string>
 			}
 	};
 
-typedef stdext::hash_map<std::string, std::string, TStringHasher> THashTable;
+typedef stdext::hash_map<std::string, float, TStringHasher> THashTable;
