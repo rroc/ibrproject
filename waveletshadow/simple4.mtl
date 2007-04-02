@@ -1,0 +1,31 @@
+# 
+# Wavefront material file
+# 
+
+newmtl Material
+Ka 0.117647 0.117647 0.117647
+Kd 0.752941 0.752941 0.852941
+Ks 0.752941 0.752941 0.752941
+illum 2
+Ns 8
+
+newmtl Material02
+Ka 0.2 0.2 0.2
+Kd 0.276471 0.972549 0.1862745
+Ks 0 0 0
+illum 2
+Ns 2
+
+newmtl Material03
+Ka 0.2 0.2 0.2
+Kd 0.333333 0.258824 0.866667
+Ks 0 0 0
+illum 2
+Ns 2
+
+newmtl Material01
+Ka 0.2 0.2 0.2
+Kd 0.9 0.1056863 0.1431373
+Ks 0 0 0
+illum 2
+Ns 2
