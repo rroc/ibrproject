@@ -31,21 +31,22 @@
 
 /*
 //EXAMPLE USAGE:
+//-------------------------
 THashTable hash;
 
 TSquare key1={1,1,1};
-TSquare value1={2,2,2};
-pair<TSquare, TSquare> item = make_pair( key1, value1);
+float value1=0.5f;
+pair<TSquare, float> item = make_pair( key1, value1);
 hash.insert( item );
 
 TSquare key2={5,4,3};
-TSquare value2={3,3,3};
-pair<TSquare, TSquare> item2 = make_pair( key2, value2);
+float value2=123.56f;
+pair<TSquare, float> item2 = make_pair( key2, value2);
 hash.insert( item2 );
 
 TSquare key3={10,15,21};
-TSquare value3={1,2,3};
-pair<TSquare, TSquare> item3 = make_pair( key3, value3);
+float value3=8.12878784132;
+pair<TSquare, float> item3 = make_pair( key3, value3);
 hash.insert( item3 );
 
 TSquare x={10,15,21};
@@ -58,13 +59,11 @@ cout << "The hash_map doesn't have an element ";
 }
 else
 {
-TSquare c = (*it).second;
+float c = (*it).second;
 TSquare d = (*it).first;
-std::cout << "[" << d.l << d.x << d.y << "] = " << c.l << c.x << c.y << std::endl;
+std::cout << "[" << d.l << d.x << d.y << "] = " << c << std::endl;
 }
-
-std::cout << "end" <<std::endl;
-
+//-------------------------
 */
 
 
@@ -77,7 +76,7 @@ std::cout << "end" <<std::endl;
 #define hashmask(n) (hashsize(n)-1)
 #define rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
 
-class TStringHasher : public stdext::hash_compare <TSquare>
+class THasher : public stdext::hash_compare <TSquare>
 	{
 	public:
 
@@ -85,21 +84,12 @@ class TStringHasher : public stdext::hash_compare <TSquare>
 		size_t operator() (const TSquare& s) const
 			{
 			return hashlittle( (void*)&s, sizeof(TSquare), 0x12345678 );
-/*
-			size_t h = 0;
-			std::string::const_iterator p, p_end;
-			for(p = s.begin(), p_end = s.end(); p != p_end; ++p)
-				{
-				h = 31 * h + (*p);
-				}
-			return h;
-*/
 			}
 
 		//compare hash
 		bool operator() (const TSquare& s1, const TSquare& s2) const
 			{
-			return ( (s1.l > s2.l) && (s1.x > s2.x) && (s1.y > s2.y) );
+			return ( (s1.l > s2.l) || (s1.x > s2.x) || (s1.y > s2.y) );
 			}
 
 
@@ -396,4 +386,4 @@ class TStringHasher : public stdext::hash_compare <TSquare>
 			}
 	};
 
-typedef stdext::hash_map<TSquare, TSquare, TStringHasher> THashTable;
+typedef stdext::hash_map<TSquare, float, THasher> THashTable;
