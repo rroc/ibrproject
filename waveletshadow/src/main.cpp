@@ -2,6 +2,8 @@
 #include "CMyRenderer.h"
 #include "CMyUiEvents.h"
 
+#include "THashtable.h"
+
 //CONSTANTS
 const int KWindowPositionX = 100;
 const int KWindowPositionY = 100;
@@ -51,7 +53,7 @@ void initGLUTOpenGL(int argc, char **argv)
 
 
 int main(int argc, char **argv)
-	{	
+	{
 	initGLUTOpenGL( argc, argv );
 
 	CMyRenderer* renderer = new CMyRenderer( KWindowWidth, KWindowHeight );
