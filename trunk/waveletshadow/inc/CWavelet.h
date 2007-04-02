@@ -1,5 +1,6 @@
 #pragma once
 
+#include "basic.h"
 #include "THashtable.h"
 
 class CWavelet
@@ -14,6 +15,11 @@ class CWavelet
 	private:
 		void DecomposeStep();
 		void ReconstructStep();
+
+		void ComputeParentSum( CWavelet aF, TSquare aS);
+		void ComputeChildrenSums( CWavelet aG, CWavelet aH );
+
+		void Product( TSquare aS, int aM);
 
 	private:
 

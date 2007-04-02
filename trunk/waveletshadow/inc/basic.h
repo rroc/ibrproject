@@ -11,7 +11,14 @@ using namespace std;
 
 #include <GL/glut.h>
 
-#include "THashTable.h"
+
+struct TSquare
+	{
+	int l; //level
+	int x; //x-coord
+	int y; //y-coord
+	};
+
 
 #ifndef M_PI
 #define M_PI        3.14159265358979323846
@@ -20,3 +27,4 @@ using namespace std;
 #define TWOPI M_PI*2.0
 #define FOURPI M_PI*4.0
 #define KDegreeToRadian M_PI/180.0
+
