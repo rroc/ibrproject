@@ -10,6 +10,28 @@ CWavelet::~CWavelet(void)
 	{
 	}
 
+float* CWavelet::Decompose(float* aMatrix, int aRows, int aCols)
+	{
+		return 0;
+
+	}
+
+float* CWavelet::Reconstruct(float* aWavelet, int aRows, int aCols)
+	{	
+		//g=1;
+		//while(g<=aCols)
+		//	for(int col=0; col<g, col++)
+		//	{
+		//		temp= c(0:g,col,:);
+		//		for(int color=0; color<3;color++)
+		//		{
+		//			
+		//		}
+		//	}
+
+return 0;
+}
+
 //Pre-compute the sums for product calculation
 float CWavelet::ComputeParentSum( CWavelet aF, TSquare aS)
 	{

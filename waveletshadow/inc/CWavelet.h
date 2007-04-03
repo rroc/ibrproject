@@ -9,12 +9,13 @@ class CWavelet
 		CWavelet(void);
 		~CWavelet(void);
 
-		void Decompose();
-		void Reconstruct();
+		float * Decompose(float* aMatrix, int aRows, int aCols);
+		float * Reconstruct(float* aWavelet, int aRows, int aCols);
 
 	private:
-		void DecomposeStep();
-		void ReconstructStep();
+		float* DecomposeStep();
+		float* ReconstructStep();
+		float* transpose(float* aMatrix);
 
 		float ComputeParentSum( CWavelet aF, TSquare aS);
 		void ComputeChildrenSums( CWavelet aG, CWavelet aH );
@@ -25,6 +26,10 @@ class CWavelet
 		int sign( int aM, int aX, int aY );
 
 	private:
+		float *iMatrix;
+		float *iWavelet;
+		int iRows;
+		int iCols;
 
 		THashTable iParentSum;
 		THashTable iChildSum;
