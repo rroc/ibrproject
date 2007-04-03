@@ -12,11 +12,20 @@ using namespace std;
 #include <GL/glut.h>
 
 
-struct TSquare
+class TSquare
 	{
-	int l; //level
-	int x; //x-coord
-	int y; //y-coord
+	public:
+		TSquare( int aL, int aX, int aY )
+			: l(aL)
+			, x(aX)
+			, y(aY)
+			{
+			//empty on purpose
+			}
+	public:
+		int l; //level
+		int x; //x-coord
+		int y; //y-coord
 	};
 
 

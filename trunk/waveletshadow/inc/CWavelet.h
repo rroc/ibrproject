@@ -16,10 +16,13 @@ class CWavelet
 		void DecomposeStep();
 		void ReconstructStep();
 
-		void ComputeParentSum( CWavelet aF, TSquare aS);
+		float ComputeParentSum( CWavelet aF, TSquare aS);
 		void ComputeChildrenSums( CWavelet aG, CWavelet aH );
 
-		void Product( TSquare aS, int aM);
+		float Product( CWavelet aG, CWavelet aH, TSquare aS, int aM);
+
+		float F(int aM, int aL, int aX, int aY );
+		int sign( int aM, int aX, int aY );
 
 	private:
 
