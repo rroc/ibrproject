@@ -76,11 +76,15 @@ CMatrix* CMatrix::crop(int aRow1,int aRow2,int aCol1, int aCol2 )
 
 void CMatrix::substitute(CMatrix *aMatrix, int aRow1, int aRow2, int aCol1, int aCol2)
 {
-	for(int rows=aRow1; rows<aRow2; rows++)
+	int R=aRow2-aRow1;
+	int C=aCol2-aCol1;
+	for(int rows=aRow1, r=0; rows<aRow2, r<R; rows++, r++)
 	{
-		for(int cols=aCol1; cols<aCol2; cols++)
+		for(int cols=aCol1,c=0; cols<aCol2, c<C; cols++,c++)
 		{
-			iMatrix.at(rows).at(cols)= aMatrix->iMatrix.at(rows).at(cols);
+			//printf("\n%d",cols);
+			//iMatrix[rows][cols]= aMatrix->iMatrix[rows][cols];
+			iMatrix.at(rows).at(cols)= aMatrix->iMatrix.at(r).at(c);
 		}
 	}
 }
@@ -91,7 +95,7 @@ void CMatrix::print()
 	{
 		for(int cols=0; cols<iCols; cols++)
 		{
-			printf("%f",iMatrix.at(rows).at(cols));
+			printf("%f\t",iMatrix.at(rows).at(cols));
 		}
 		printf("\n");
 	}
