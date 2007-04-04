@@ -11,7 +11,9 @@
 CMyRenderer* CMyRenderer::iCurrentRenderer = 0;
 
 static const float KEpsilon( 0.0001 );
-static const string KObjectName = "simple4"; //"gt16k"; //"simple4";
+
+static const float	KObjectScale = 1.0; //0.0045
+static const string KObjectName = "testscene"; //"testscene" (1.0); "monster" (0.3); "gt16k" (0.0045); //"simple4";
 static const string KObjectFileName = KObjectName+".obj";
 
 static const string KDataFileName	= KObjectName + "_coefficients.bin";
@@ -82,6 +84,8 @@ void CMyRenderer::InitMain()
 	glMatrixMode(GL_MODELVIEW);
 
 
+//	InitializeSamplingData();
+
 	//SETUP Precalculater transfer functions
 	//iSampleData = new CSHSamples( 1000, 9 );
 	//iLightData  = new CLights();
@@ -95,13 +99,88 @@ void CMyRenderer::InitMain()
 	InitLights();
 
 	//Do the Precalculated Radiance Transfer
-	//PreCalculateDirectLight();
+	PreCalculateDirectLight();
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
 	//iLightVector *= KLightVectorSize; // for drawing the vector!
 	}
 
+int CMyRenderer::InitializeSamplingData()
+	{
+	printf("Initializing sampling coefficients...");
+	iSampleData.clear();
+
+	int index(0);
+	float diff = 1.0f/(KSamplingResolution-1);
+	for (int cube=0; cube<6; cube++)
+		{
+		for(float v=0; v<=1.0f; v += diff)
+			{
+			for(float u=0; u<1.0f; u+=diff )
+				{
+				switch(cube)
+					{
+					case 0: //roof
+						iSampleData.push_back( TVector3( 
+														   (u-0.5)*2.0f
+														,  1.0
+														, -(v-0.5)*2.0f 
+														) 
+													);
+						break;
+					case 1: //left
+						iSampleData.push_back( TVector3( 
+														  -1.0f
+														, -(v-0.5)*2.0f
+														, -(u-0.5)*2.0f 
+														)
+													);
+						break;
+					case 2: //front 
+						iSampleData.push_back( TVector3( 
+														   (u-0.5)*2.0f
+														, -(v-0.5)*2.0f
+														, -1.0f 
+														)
+													);
+						break;
+					case 3: //right
+						iSampleData.push_back( TVector3( 
+														   1.0
+														, -(v-0.5)*2.0f
+														,  (u-0.5)*2.0f 
+														)
+													);
+						break;
+					case 4: //floor
+						iSampleData.push_back( TVector3( 
+														   (u-0.5)*2.0f
+														, -1.0
+														,  (v-0.5)*2.0f 
+														)
+													);
+						break;
+					case 5: //back
+						iSampleData.push_back( TVector3( 
+														  (u-0.5)*2.0f
+														, (v-0.5)*2.0f
+														, 1.0f 
+														)
+													);
+						break;
+					default:
+						//no other options
+						break;
+					}
+//				printf("%d\t%f\t%f - [%f, %f, %f]\n", cube, u, v, iSampleData.back().iX, iSampleData.back().iY, iSampleData.back().iZ);
+				index++;
+				}
+			}
+		}
+	printf("READY, with %d coefficients.\n\n", index);
+	return index;
+	}
 
 /** \brief Method that creates basic solar system
 *
@@ -114,16 +193,16 @@ void CMyRenderer::CreateScene()
 
 	//OBJ files
 	CObjLoader* loader = new CObjLoader();
-	iCarObjectCount = loader->LoadObj( KObjectFileName );
+	iObjectCount = loader->LoadObj( KObjectFileName );
 
 	////3DS
 	//CMeshLoader* loader = new CMeshLoader();
 	//iCarObjectCount = loader->Load3Ds( "simple3.3ds", 0.004 );
 
-	printf("Adding %d objects\n", iCarObjectCount );
-	for( int i=0; i<iCarObjectCount; i++ )
+	printf("Adding %d objects\n", iObjectCount );
+	for( int i=0; i<iObjectCount; i++ )
 		{
-		iMeshList.push_back( loader->GetMesh( i, 0.0045 ) );
+		iMeshList.push_back( loader->GetMesh( i, KObjectScale ) );
 		}
 	printf("\n");
 
@@ -165,7 +244,7 @@ void CMyRenderer::CreateScene()
 	//	currentNode = currentNode->addChild( iSceneRotation );
 
 	//Add model parts:
-	for( int i=0; i<iCarObjectCount; i++ )
+	for( int i=0; i<iObjectCount; i++ )
 		{
 		currentNode = currentNode->addChild( new CSceneMesh( iMeshList.at(i) ) );
 		}
@@ -410,7 +489,9 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 
 void CMyRenderer::PreCalculateDirectLight()
 	{
-	printf("Start calculating the co-efficients...\n");
+	int numberOfSamples = InitializeSamplingData();
+
+	printf("Start calculating the visibility co-efficients...\n");
 	printf(" - Vertices in the scene: %d\n", iVerticesInScene );
 
 	int numObjects = iSceneGraph.size(); //objects.size();
@@ -425,7 +506,6 @@ void CMyRenderer::PreCalculateDirectLight()
 	printf(" - Start Time: %s\n", asctime(currenttime) );
 
 	//GENERATE COEFFs
-	//Otherwise, regenerate the coefficients
 	//Loop through the vertices and project the transfer function into SH space
 
 	int vertexCount(0);
@@ -436,68 +516,54 @@ void CMyRenderer::PreCalculateDirectLight()
 	printf("Calculating vertex:         " );
 
 	CMesh* currentMesh;
+	vector<float> vertexVisibility;
+
 	//FOR EACH OBJECT...
 	for(int i=0; i<numObjects; ++i)
 		{
-		//SH_OBJECT * currentObject=objects[i];
 		currentMesh = iSceneGraph.at( i );
-
-		//currentMesh->iVertexShadowedLightCoefficients.clear();
-		//currentMesh->iVertexUnshadowedLightCoefficients.clear();
-
-
+		currentMesh->iVisibilityCoefficients.clear();
 
 		//FOR EACH VERTEX...
 		for( int j=0, endj=currentMesh->iVertices.size(); j<endj; ++j )
 			{
 			printf("\b\b\b\b\b\b\b\b%8d", ++vertexCount );
 
-			//currentMesh->iVertexShadowedLightCoefficients.push_back(   initCoefficients );
-			//currentMesh->iVertexUnshadowedLightCoefficients.push_back( initCoefficients );
-
 			//SAMPLES FOR EACH VERTEX
 			// i is current object
-			// j is cuurent vertex
+			// j is current vertex
 			// k is current sample
-//			for(int k=0, endk=iSampleData->iNumberOfSamples; k<endk; ++k)
+			vertexVisibility.clear();
+			for(int k=0; k<numberOfSamples; ++k)
 				{
 				//Calculate cosine term for this sample
-				dot = 0.0; // iSampleData->iVector.at( k ).dot( currentMesh->iVertexNormals.at(j) );
+				dot = iSampleData.at( k ).dot( currentMesh->iVertexNormals.at(j) );
 
 				//UPPER HEMISPHERE?
 				//Clamp to [0, 1]
 				if( dot>0.0 )
 					{
 					//Fill in a RAY structure for this sample
-					ray.Set(  currentMesh->iVertices.at(j) //+ currentMesh->iVertexNormals.at(j)*KEpsilon*2.0
-						, TVector3() );//iSampleData->iVector.at(k) );
+					ray.Set(  
+						currentMesh->iVertices.at(j) //+ currentMesh->iVertexNormals.at(j)*KEpsilon*2.0
+						, iSampleData.at(k) );
 
 					//See if the ray is blocked by any object
 					rayBlocked = IsRayBlocked( &ray );
 
-					//Add the contribution of this sample to the coefficients
-/*					for(int l=0; l<numFunctions; ++l)
+					//NOT in the shadow:
+					if(!rayBlocked)
 						{
-						contribution = dot * iSampleData->iFunctionValues.at(k).at(l);
-//						currentMesh->iVertexUnshadowedLightCoefficients.at( j ).at( l ) += contribution;
-
-						//NOT in the shadow:
-						if(!rayBlocked)
-							{
-//							currentMesh->iVertexShadowedLightCoefficients.at( j ).at( l ) += contribution;
-							}
+						vertexVisibility.push_back( dot );
 						}
-*/
-					}
-					
+					//SHADOWED
+					else
+						{
+						vertexVisibility.push_back( 0.0 );
+						}
+					}					
 				}
-
-			//Rescale the coefficients
-//			for(int l=0; l<numFunctions; ++l)
-				{
-				//currentMesh->iVertexUnshadowedLightCoefficients.at( j ).at( l ) *= multiplier;
-				//currentMesh->iVertexShadowedLightCoefficients.at( j ).at( l )	*= multiplier;
-				}
+			currentMesh->iVisibilityCoefficients.push_back( vertexVisibility );
 			}
 		}
 
@@ -769,34 +835,6 @@ bool CMyRenderer::IsRayBlocked( CRay* aRay )
 	}
 
 
-/*
-void CMyRenderer::DrawTriangle(TVector3 aVx[], TVector3 aNv[], TColorRGBA aCol)
-{
-//glDisable( GL_TEXTURE_2D );
-
-//FACE COLORING
-#ifdef USE_PIXEL_READ_DOF
-GLfloat mat_diffuse[] = { aCol.iR, aCol.iG, aCol.iB };
-glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-#else
-glColor3f( aCol.iR, aCol.iG, aCol.iB);
-#endif
-
-glBegin(GL_TRIANGLES);
-glNormal3f(aNv[0].iX, aNv[0].iY, aNv[0].iZ);
-glVertex3f(aVx[0].iX, aVx[0].iY, aVx[0].iZ);
-
-glNormal3f(aNv[1].iX, aNv[1].iY, aNv[1].iZ);
-glVertex3f(aVx[1].iX, aVx[1].iY, aVx[1].iZ);
-
-glNormal3f(aNv[2].iX, aNv[2].iY, aNv[2].iZ);
-glVertex3f(aVx[2].iX, aVx[2].iY, aVx[2].iZ);
-glEnd();
-
-//glEnable( GL_TEXTURE_2D );
-}
-*/
-
 
 void CMyRenderer::DrawCubemap()
 	{
@@ -807,7 +845,8 @@ void CMyRenderer::DrawCubemap()
 	// select our current texture
 //	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
 
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
 	//glDisable(GL_CULL_FACE);
 	//glDisable(GL_LIGHTING );
 
@@ -971,7 +1010,8 @@ void CMyRenderer::DrawCubemap()
 	
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);	// normal depth buffering
 
 	//glEnable(GL_CULL_FACE);
 	//glEnable(GL_LIGHTING );
