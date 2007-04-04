@@ -50,8 +50,8 @@ class CMesh {
 
 		vector<TColorRGBA> iFaceColors; ///  face colors for each triangle
 
-		vector< vector<float> > iVertexUnshadowedLightCoefficients;
-		vector< vector<float> > iVertexShadowedLightCoefficients;
+		//per mesh we store (KSamplingResolution*KSamplingResolution*6) floats
+		vector< vector<float> >		iVisibilityCoefficients;
 
 		int iTextureId;
 	};

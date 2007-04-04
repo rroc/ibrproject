@@ -15,6 +15,9 @@
 
 #include "CRay.h"
 
+//CONSTANTS
+static const int KSamplingResolution(32); // this is used as the cubemap resolution ie. (64x64x6)
+
 //CLASS DECLARATION
 
 /** \brief Rendering class.
@@ -101,6 +104,8 @@ class CMyRenderer
 		bool IsRayBlocked( CRay* aRay );
 		void ShowFPS();
 
+		int InitializeSamplingData();
+
 	//PUBLIC STATIC DATA
 	//------------------
 	public:
@@ -126,7 +131,10 @@ class CMyRenderer
 		int iObjectsInScene;
 		int iVerticesInScene;
 
-		int	iCarObjectCount;
+		int	iObjectCount;
+
+		//The sampling vectors for raytracing
+		vector<TVector3>			iSampleData;
 
 		//FPS
 		int			iFrame;
