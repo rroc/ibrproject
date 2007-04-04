@@ -50,8 +50,7 @@ pair<TSquare, float> item3 = make_pair( key3, value3);
 hash.insert( item3 );
 
 TSquare x={10,15,21};
-THashTable::iterator it;
-it = hash.find( x );
+THashTable::iterator it = hash.find( x );
 
 if ( it == hash.end( ) )
 {
@@ -91,9 +90,6 @@ class THasher : public stdext::hash_compare <TSquare>
 			{
 			return ( (s1.l > s2.l) || (s1.x > s2.x) || (s1.y > s2.y) );
 			}
-
-
-
 
 //------------------------------------------------------------
 // The following Extracted from 

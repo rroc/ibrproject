@@ -55,9 +55,6 @@ void initGLUTOpenGL(int argc, char **argv)
 
 int main(int argc, char **argv)
 	{
-
-
-		
 	initGLUTOpenGL( argc, argv );
 
 	CMyRenderer* renderer = new CMyRenderer( KWindowWidth, KWindowHeight );
