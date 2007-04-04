@@ -37,3 +37,4 @@ class TSquare
 #define FOURPI M_PI*4.0
 #define KDegreeToRadian M_PI/180.0
 
+//#define USE_OPENMP

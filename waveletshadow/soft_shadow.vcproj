@@ -38,6 +38,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="./inc/;"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE"
+				OpenMP="true"
 				DebugInformationFormat="1"
 			/>
 			<Tool

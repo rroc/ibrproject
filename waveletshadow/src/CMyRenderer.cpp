@@ -6,15 +6,17 @@
 #include "CObjLoader.h"
 #include <ctime>
 
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 
 //INIT STATIC DATA
 CMyRenderer* CMyRenderer::iCurrentRenderer = 0;
 
 static const float KEpsilon( 0.0001 );
 
-static const float	KObjectScale = 1.0; //0.0045
-static const string KObjectName = "testscene"; //"testscene" (1.0); "monster" (0.3); "gt16k" (0.0045); //"simple4";
+static const float	KObjectScale = 0.0045;
+static const string KObjectName = "simple4"; //"testscene" (1.0); "monster" (0.3); "gt16k" (0.0045); //"simple4";
 static const string KObjectFileName = KObjectName+".obj";
 
 static const string KDataFileName	= KObjectName + "_coefficients.bin";
@@ -100,7 +102,9 @@ void CMyRenderer::InitMain()
 	InitLights();
 
 	//Do the Precalculated Radiance Transfer
+#ifdef USE_OPENMP
 	PreCalculateDirectLight();
+#endif
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
@@ -509,7 +513,7 @@ void CMyRenderer::PreCalculateDirectLight()
 	//GENERATE COEFFs
 	//Loop through the vertices and project the transfer function into SH space
 
-	int vertexCount(0);
+	static int vertexCount(0);
 	float dot(0.0);
 	float contribution(0.0);
 	bool rayBlocked;
@@ -517,9 +521,10 @@ void CMyRenderer::PreCalculateDirectLight()
 	printf("Calculating vertex:         " );
 
 	CMesh* currentMesh;
-	vector<float> vertexVisibility;
 
+#ifdef USE_OPENMP
 	omp_set_num_threads( 3 );
+#endif
 
 	//FOR EACH OBJECT...
 	for(int i=0; i<numObjects; ++i)
@@ -530,7 +535,9 @@ void CMyRenderer::PreCalculateDirectLight()
 		currentMesh->iVisibilityCoefficients.resize(numOfVertices);
 
 		//FOR EACH VERTEX...
-#pragma omp parallel for
+#ifdef USE_OPENMP
+#pragma omp parallel for shared(vertexCount, numOfVertices)
+#endif
 		for( int j=0; j<numOfVertices; ++j )
 			{
 			printf("\b\b\b\b\b\b\b\b%8d", ++vertexCount );
@@ -539,7 +546,8 @@ void CMyRenderer::PreCalculateDirectLight()
 			// i is current object
 			// j is current vertex
 			// k is current sample
-			vertexVisibility.clear();
+			vector<float> vertexVisibility;
+
 			for(int k=0; k<numberOfSamples; ++k)
 				{
 				//Calculate cosine term for this sample
