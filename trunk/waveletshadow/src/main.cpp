@@ -1,6 +1,7 @@
 #include "basic.h"
 #include "CMyRenderer.h"
 #include "CMyUiEvents.h"
+#include "CMatrix.h"
 
 #include "THashtable.h"
 
@@ -54,6 +55,9 @@ void initGLUTOpenGL(int argc, char **argv)
 
 int main(int argc, char **argv)
 	{
+
+
+		
 	initGLUTOpenGL( argc, argv );
 
 	CMyRenderer* renderer = new CMyRenderer( KWindowWidth, KWindowHeight );
