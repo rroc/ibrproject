@@ -5,7 +5,8 @@
 #include "CMeshLoader.h"
 #include "CObjLoader.h"
 #include <ctime>
-//#include <pthread.h>
+
+#include <omp.h>
 
 //INIT STATIC DATA
 CMyRenderer* CMyRenderer::iCurrentRenderer = 0;
@@ -518,14 +519,19 @@ void CMyRenderer::PreCalculateDirectLight()
 	CMesh* currentMesh;
 	vector<float> vertexVisibility;
 
+	omp_set_num_threads( 3 );
+
 	//FOR EACH OBJECT...
 	for(int i=0; i<numObjects; ++i)
 		{
 		currentMesh = iSceneGraph.at( i );
-		currentMesh->iVisibilityCoefficients.clear();
+		int numOfVertices =currentMesh->iVertices.size();
+
+		currentMesh->iVisibilityCoefficients.resize(numOfVertices);
 
 		//FOR EACH VERTEX...
-		for( int j=0, endj=currentMesh->iVertices.size(); j<endj; ++j )
+#pragma omp parallel for
+		for( int j=0; j<numOfVertices; ++j )
 			{
 			printf("\b\b\b\b\b\b\b\b%8d", ++vertexCount );
 
@@ -563,7 +569,8 @@ void CMyRenderer::PreCalculateDirectLight()
 						}
 					}					
 				}
-			currentMesh->iVisibilityCoefficients.push_back( vertexVisibility );
+			//add visibility list to current vertex
+			currentMesh->iVisibilityCoefficients.at(j) = vertexVisibility;
 			}
 		}
 
