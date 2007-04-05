@@ -71,6 +71,16 @@ void CMyRenderer::LoadTextures()
 	iTextures.push_back( loadTGATexture("church_right.tga") );
 	iTextures.push_back( loadTGATexture("church_floor.tga") );
 	iTextures.push_back( loadTGATexture("church_back.tga") );
+
+	//iTextures.push_back( loadCubeMapTextures(
+	//										  "church_roof.tga"
+	//										, "church_left.tga"
+	//										, "church_front.tga"
+	//										, "church_right.tga"
+	//										, "church_floor.tga"
+	//										, "church_back.tga"
+	//										) 
+	//					); 
 	}
 
 //
@@ -853,177 +863,96 @@ bool CMyRenderer::IsRayBlocked( CRay* aRay )
 
 void CMyRenderer::DrawCubemap()
 	{
-
 	glColor3f(1.0f,1.0f,1.0f);
 	glEnable(GL_TEXTURE_2D);
 	
-	// select our current texture
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
-
-	//glDisable(GL_DEPTH_TEST);
 	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
 	//glDisable(GL_CULL_FACE);
 	//glDisable(GL_LIGHTING );
 
-	float size(3.5f);
-	//float xdiff1(1/3.0f);
-	//float xdiff2(2/3.0f);
-
-	//glBegin(GL_QUADS);
-
-	//show cubemap
-	//glTexCoord2f(0,1);
-	//glVertex3f(-size,size,-size);
-	//glTexCoord2f(0,0);
-	//glVertex3f(-size,-size,-size);
-	//glTexCoord2f(1,0);
-	//glVertex3f(size,-size,-size);
-	//glTexCoord2f(1,1);
-	//glVertex3f(size,size,-size);
-
 	//USING MULTIPLE TEXTURES
+	const float size(3.5f);
+	const float maxEps(0.999);
+	const float minEps(0.001);
+
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f,1.0f);
+	glTexCoord2f(minEps,maxEps);
 	glVertex3f(-size,size,size);
-	glTexCoord2f(0.0f,0.0f);
+	glTexCoord2f(minEps,minEps);
 	glVertex3f(-size,size,-size);
-	glTexCoord2f(1.0f,0.0f);
+	glTexCoord2f(maxEps,minEps);
 	glVertex3f(size,size,-size);
-	glTexCoord2f(1.0f,1.0f);
+	glTexCoord2f(maxEps,maxEps);
 	glVertex3f(size,size,size);
 	glEnd();
 
 	//left
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(1) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f,1.0);
+	glTexCoord2f(minEps,maxEps);
 	glVertex3f(-size,size,size);
-	glTexCoord2f(0.0f,0.0f);
+	glTexCoord2f(minEps,minEps);
 	glVertex3f(-size,-size,size);
-	glTexCoord2f(1.0f,0.0f);
+	glTexCoord2f(maxEps,minEps);
 	glVertex3f(-size,-size,-size);
-	glTexCoord2f(1.0f,1.0f);
+	glTexCoord2f(maxEps,maxEps);
 	glVertex3f(-size,size,-size);
 	glEnd();
 
 	//front 
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(2) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f,1.0f);
+	glTexCoord2f(minEps,maxEps);
 	glVertex3f(-size,size,-size);
-	glTexCoord2f(0.0f,0.0f);
+	glTexCoord2f(minEps,minEps);
 	glVertex3f(-size,-size,-size);
-	glTexCoord2f(1.0f,0.0f);
+	glTexCoord2f(maxEps,minEps);
 	glVertex3f(size,-size,-size);
-	glTexCoord2f(1.0f,1.0f);
+	glTexCoord2f(maxEps,maxEps);
 	glVertex3f(size,size,-size);
 	glEnd();
 
 	//right
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(3) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f,1.0f);
+	glTexCoord2f(minEps,maxEps);
 	glVertex3f(size,size,-size);
-	glTexCoord2f(0.0f,0.0f);
+	glTexCoord2f(minEps,minEps);
 	glVertex3f(size,-size,-size);
-	glTexCoord2f(1.0f,0.0f);
+	glTexCoord2f(maxEps,minEps);
 	glVertex3f(size,-size,size);
-	glTexCoord2f(1.0f,1.0f);
+	glTexCoord2f(maxEps,maxEps);
 	glVertex3f(size,size,size);
 	glEnd();
 
 	//fLoor
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(4) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f,1.0f);
+	glTexCoord2f(minEps,maxEps);
 	glVertex3f(-size,-size,-size);
-	glTexCoord2f(0.0f,0.0f);	
+	glTexCoord2f(minEps,minEps);	
 	glVertex3f(-size,-size,size);
-	glTexCoord2f(1.0f,0.0f);
+	glTexCoord2f(maxEps,minEps);
 	glVertex3f(size,-size,size);
-	glTexCoord2f(1.0f,1.0f);
+	glTexCoord2f(maxEps,maxEps);
 	glVertex3f(size,-size,-size);
 	glEnd();
 
 	//back
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(5) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f,1.0f);
+	glTexCoord2f(minEps,maxEps);
 	glVertex3f(-size,-size,size);
-	glTexCoord2f(0.0f,0.0f);
+	glTexCoord2f(minEps,minEps);
 	glVertex3f(-size,size,size);
-	glTexCoord2f(1.0f,0.0f);
+	glTexCoord2f(maxEps,minEps);
 	glVertex3f(size,size,size);
-	glTexCoord2f(1.0f,1.0f);
+	glTexCoord2f(maxEps,maxEps);
 	glVertex3f(size,-size,size);
 	glEnd();
 
-	/////USING ONE TEXTURE
-	//float xdiff1(0.25f);
-	//float xdiff2(0.5f);
-	////front1 
-	//glTexCoord2f(xdiff1,0.75);
-	//glVertex3f(-size,size,-size);
-	//glTexCoord2f(xdiff1,0.5);
-	//glVertex3f(-size,-size,-size);
-	//glTexCoord2f(xdiff2,0.5);
-	//glVertex3f(size,-size,-size);
-	//glTexCoord2f(xdiff2,0.75);
-	//glVertex3f(size,size,-size);
-
-	////fLoor2
-	//glTexCoord2f(xdiff1,0.5);
-	//glVertex3f(-size,-size,-size);
-	//glTexCoord2f(xdiff1,0.25);	
-	//glVertex3f(-size,-size,size);
-	//glTexCoord2f(xdiff2,0.25);
-	//glVertex3f(size,-size,size);
-	//glTexCoord2f(xdiff2,0.5);
-	//glVertex3f(size,-size,-size);
-
-	////back3
-	//glTexCoord2f(xdiff1,0.25);
-	//glVertex3f(-size,-size,size);
-	//glTexCoord2f(xdiff1,0.0);
-	//glVertex3f(-size,size,size);
-	//glTexCoord2f(xdiff2,0.0);
-	//glVertex3f(size,size,size);
-	//glTexCoord2f(xdiff2,0.25);
-	//glVertex3f(size,-size,size);
-
-	////left4
-	//glTexCoord2f(0.0,0.75);
-	//glVertex3f(-size,size,size);
-	//glTexCoord2f(0.0,0.5);
-	//glVertex3f(-size,-size,size);
-	//glTexCoord2f(xdiff1,0.5);
-	//glVertex3f(-size,-size,-size);
-	//glTexCoord2f(xdiff1,0.75);
-	//glVertex3f(-size,size,-size);
-
-	////right5
-	//glTexCoord2f(xdiff2,0.75);
-	//glVertex3f(size,size,-size);
-	//glTexCoord2f(xdiff2,0.5);
-	//glVertex3f(size,-size,-size);
-	//glTexCoord2f(0.75,0.5);
-	//glVertex3f(size,-size,size);
-	//glTexCoord2f(0.75,0.75);
-	//glVertex3f(size,size,size);
-	//
-	////roof6
-	//glTexCoord2f(xdiff1,1.0);
-	//glVertex3f(-size,size,size);
-	//glTexCoord2f(xdiff1,0.75);
-	//glVertex3f(-size,size,-size);
-	//glTexCoord2f(xdiff2,0.75);
-	//glVertex3f(size,size,-size);
-	//glTexCoord2f(xdiff2,1.0);
-	//glVertex3f(size,size,size);
-	
-	glEnd();
 	glDisable(GL_TEXTURE_2D);
 	//glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);	// normal depth buffering
