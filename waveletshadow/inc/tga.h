@@ -86,5 +86,6 @@ void ReadTGAgray8bitsRLE (FILE *fp, gl_texture_t *texinfo);
 void ReadTGAgray16bitsRLE (FILE *fp, gl_texture_t *texinfo);
 gl_texture_t * ReadTGAFile (const char *filename);
 GLuint loadTGATexture(const char *filename);
+GLuint loadCubeMapTextures( const char *filename1, const char *filename2, const char *filename3, const char *filename4, const char *filename5, const char *filename6);
 
 #endif
