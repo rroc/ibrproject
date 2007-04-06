@@ -114,6 +114,7 @@ void CMyRenderer::InitMain()
 	//Do the Precalculated Radiance Transfer
 #ifdef USE_OPENMP
 	PreCalculateDirectLight();
+//	WriteTGA( "test.tga", 30, 30, reinterpret_cast<char*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) ) );
 #endif
 
 	//	iLightVector = iLightData->GetLightVector();
