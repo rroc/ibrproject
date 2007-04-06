@@ -111,7 +111,7 @@ GetTextureInfo (tga_header_t *header, gl_texture_t *texinfo)
 
 
 void
-ReadTGA8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
+ReadTexture8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 	{
 	int i;
 	GLubyte color;
@@ -130,7 +130,7 @@ ReadTGA8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 
 
 void
-ReadTGA16bits (FILE *fp, gl_texture_t *texinfo)
+ReadTexture16bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 	unsigned short color;
@@ -149,7 +149,7 @@ ReadTGA16bits (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGA24bits (FILE *fp, gl_texture_t *texinfo)
+ReadTexture24bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -164,7 +164,7 @@ ReadTGA24bits (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGA32bits (FILE *fp, gl_texture_t *texinfo)
+ReadTexture32bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -187,7 +187,7 @@ ReadTGA32bits (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGAgray8bits (FILE *fp, gl_texture_t *texinfo)
+ReadTexturegray8bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -200,7 +200,7 @@ ReadTGAgray8bits (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGAgray16bits (FILE *fp, gl_texture_t *texinfo)
+ReadTexturegray16bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -214,7 +214,7 @@ ReadTGAgray16bits (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGA8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
+ReadTexture8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte color;
@@ -256,7 +256,7 @@ ReadTGA8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 
 
 void
-ReadTGA16bitsRLE (FILE *fp, gl_texture_t *texinfo)
+ReadTexture16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	unsigned short color;
@@ -298,7 +298,7 @@ ReadTGA16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGA24bitsRLE (FILE *fp, gl_texture_t *texinfo)
+ReadTexture24bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte rgb[3];
@@ -338,7 +338,7 @@ ReadTGA24bitsRLE (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGA32bitsRLE (FILE *fp, gl_texture_t *texinfo)
+ReadTexture32bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte rgba[4];
@@ -380,7 +380,7 @@ ReadTGA32bitsRLE (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGAgray8bitsRLE (FILE *fp, gl_texture_t *texinfo)
+ReadTexturegray8bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte color;
@@ -412,7 +412,7 @@ ReadTGAgray8bitsRLE (FILE *fp, gl_texture_t *texinfo)
 
 
 void
-ReadTGAgray16bitsRLE (FILE *fp, gl_texture_t *texinfo)
+ReadTexturegray16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte color, alpha;
@@ -451,7 +451,7 @@ ReadTGAgray16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 
 
 gl_texture_t *
-ReadTGAFile (const char *filename)
+ReadTextureFile (const char *filename)
 	{
 	FILE *fp;
 	gl_texture_t *texinfo;
@@ -510,7 +510,7 @@ ReadTGAFile (const char *filename)
 
 		case 1:
 			/* uncompressed 8 bits color index */
-			ReadTGA8bits (fp, colormap, texinfo);
+			ReadTexture8bits (fp, colormap, texinfo);
 			break;
 
 		case 2:
@@ -518,15 +518,15 @@ ReadTGAFile (const char *filename)
 			switch (header.pixel_depth)
 				{
 				case 16:
-					ReadTGA16bits (fp, texinfo);
+					ReadTexture16bits (fp, texinfo);
 					break;
 
 				case 24:
-					ReadTGA24bits (fp, texinfo);
+					ReadTexture24bits (fp, texinfo);
 					break;
 
 				case 32:
-					ReadTGA32bits (fp, texinfo);
+					ReadTexture32bits (fp, texinfo);
 					break;
 				}
 
@@ -535,15 +535,15 @@ ReadTGAFile (const char *filename)
 		case 3:
 			/* uncompressed 8 or 16 bits grayscale */
 			if (header.pixel_depth == 8)
-				ReadTGAgray8bits (fp, texinfo);
+				ReadTexturegray8bits (fp, texinfo);
 			else /* 16 */
-				ReadTGAgray16bits (fp, texinfo);
+				ReadTexturegray16bits (fp, texinfo);
 
 			break;
 
 		case 9:
 			/* RLE compressed 8 bits color index */
-			ReadTGA8bitsRLE (fp, colormap, texinfo);
+			ReadTexture8bitsRLE (fp, colormap, texinfo);
 			break;
 
 		case 10:
@@ -551,15 +551,15 @@ ReadTGAFile (const char *filename)
 			switch (header.pixel_depth)
 				{
 				case 16:
-					ReadTGA16bitsRLE (fp, texinfo);
+					ReadTexture16bitsRLE (fp, texinfo);
 					break;
 
 				case 24:
-					ReadTGA24bitsRLE (fp, texinfo);
+					ReadTexture24bitsRLE (fp, texinfo);
 					break;
 
 				case 32:
-					ReadTGA32bitsRLE (fp, texinfo);
+					ReadTexture32bitsRLE (fp, texinfo);
 					break;
 				}
 
@@ -568,14 +568,14 @@ ReadTGAFile (const char *filename)
 		case 11:
 			/* RLE compressed 8 or 16 bits grayscale */
 			if (header.pixel_depth == 8)
-				ReadTGAgray8bitsRLE (fp, texinfo);
+				ReadTexturegray8bitsRLE (fp, texinfo);
 			else /* 16 */
-				ReadTGAgray16bitsRLE (fp, texinfo);
+				ReadTexturegray16bitsRLE (fp, texinfo);
 			break;
 
 		default:
 			/* image type is not correct */
-			fprintf (stderr, "error: unknown TGA image type %i!\n", header.image_type);
+			fprintf (stderr, "error: unknown Texture image type %i!\n", header.image_type);
 			free (texinfo->texels);
 			free (texinfo);
 			texinfo = NULL;
@@ -591,13 +591,12 @@ ReadTGAFile (const char *filename)
 	}
 
 
-GLuint
-loadTGATexture (const char *filename)
+GLuint LoadTGATexture (const char *filename)
 	{
 	gl_texture_t *tga_tex = NULL;
 	GLuint tex_id = 0;
 
-	tga_tex = ReadTGAFile (filename);
+	tga_tex = ReadTextureFile (filename);
 
 	if (tga_tex && tga_tex->texels)
 		{
@@ -629,7 +628,7 @@ loadTGATexture (const char *filename)
 	return tex_id;
 	}
 
-void WriteTGA(const char* aFileName, int width, int height, char* data )
+void WriteTGATexture(const char* aFileName, int width, int height, char* data )
 	{
 		FILE *outputFile;
 		outputFile = fopen(aFileName, "wb");
@@ -660,7 +659,7 @@ void WriteTGA(const char* aFileName, int width, int height, char* data )
 	}
 
 
-GLuint loadCubeMapTextures(
+GLuint LoadCubeMapTextures(
 						   const char *filename1
 						   , const char *filename2
 						   , const char *filename3
@@ -672,17 +671,17 @@ GLuint loadCubeMapTextures(
 	GLuint tex_id = 0;
 
 	gl_texture_t *texture1 = NULL;
-	texture1 = ReadTGAFile (filename1);
+	texture1 = ReadTextureFile (filename1);
 	gl_texture_t *texture2 = NULL;
-	texture2 = ReadTGAFile (filename2);
+	texture2 = ReadTextureFile (filename2);
 	gl_texture_t *texture3 = NULL;
-	texture3 = ReadTGAFile (filename3);
+	texture3 = ReadTextureFile (filename3);
 	gl_texture_t *texture4 = NULL;
-	texture4 = ReadTGAFile (filename4);
+	texture4 = ReadTextureFile (filename4);
 	gl_texture_t *texture5 = NULL;
-	texture5 = ReadTGAFile (filename5);
+	texture5 = ReadTextureFile (filename5);
 	gl_texture_t *texture6 = NULL;
-	texture6 = ReadTGAFile (filename6);
+	texture6 = ReadTextureFile (filename6);
 
 	if(
 		(texture1 && texture1->texels)

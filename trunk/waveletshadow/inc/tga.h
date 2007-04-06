@@ -27,8 +27,8 @@
  * gcc -Wall -ansi -L/usr/X11R6/lib -lGL -lGLU -lglut tga.c -o tga
  */
 
-#ifndef TGA_H
-#define TGA_H
+#ifndef Texture_H
+#define Texture_H
 
 #include "basic.h"
 
@@ -49,7 +49,7 @@ typedef struct
 
 #pragma pack(push, 1)
 
-/* tga header */
+//TGA header 
 typedef struct
 {
   GLubyte id_lenght;          /* size of image id */
@@ -67,30 +67,30 @@ typedef struct
   short	height;               /* picture height (in pixels) */
 
   GLubyte pixel_depth;        /* bits per pixel: 8, 16, 24 or 32 */
-  GLubyte image_descriptor;   /* 24 bits = 0x00; 32 bits = 0x80 */
+  GLubyte image_descriptor;   /* 24 bits = 0x00; 32 bits = 0x08 */
 
 } tga_header_t;
 
 #pragma pack(pop)
 
 void GetTextureInfo (tga_header_t* header, gl_texture_t* texinfo);
-void ReadTGA8bits (FILE* fp, GLubyte* colormap, gl_texture_t* texinfo);
-void ReadTGA16bits (FILE* fp, gl_texture_t* texinfo);
-void ReadTGA24bits (FILE* fp, gl_texture_t* texinfo);
-void ReadTGA32bits (FILE* fp, gl_texture_t* texinfo);
-void ReadTGAgray8bits (FILE* fp, gl_texture_t* texinfo);
-void ReadTGAgray16bits (FILE* fp, gl_texture_t* texinfo);
-void ReadTGA8bitsRLE (FILE* fp, GLubyte* colormap, gl_texture_t* texinfo);
-void ReadTGA16bitsRLE (FILE* fp, gl_texture_t* texinfo);
-void ReadTGA24bitsRLE (FILE* fp, gl_texture_t* texinfo);
-void ReadTGA32bitsRLE (FILE* fp, gl_texture_t* texinfo);
-void ReadTGAgray8bitsRLE (FILE* fp, gl_texture_t* texinfo);
-void ReadTGAgray16bitsRLE (FILE* fp, gl_texture_t* texinfo);
-gl_texture_t*  ReadTGAFile (const char* filename);
-GLuint loadTGATexture(const char* filename);
-GLuint loadCubeMapTextures( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
+void ReadTexture8bits (FILE* fp, GLubyte* colormap, gl_texture_t* texinfo);
+void ReadTexture16bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTexture24bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTexture32bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTexturegray8bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTexturegray16bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTexture8bitsRLE (FILE* fp, GLubyte* colormap, gl_texture_t* texinfo);
+void ReadTexture16bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTexture24bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTexture32bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTexturegray8bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTexturegray16bitsRLE (FILE* fp, gl_texture_t* texinfo);
+gl_texture_t*  ReadTextureFile (const char* filename);
 
+GLuint LoadTGATexture(const char* filename);
+void WriteTGATexture( const char* aFileName, int width, int height, char* data );
 
-void WriteTGA( const char* aFileName, int width, int height, char* data );
+GLuint LoadCubeMapTextures( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
 
 #endif

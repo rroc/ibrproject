@@ -91,6 +91,7 @@ class CMyRenderer
 		void RenderObject(CMesh* aMesh);
 		void DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3]);
 		void DrawCubemap();
+		void DrawMap();
 
 		void DrawLightSphere();
 

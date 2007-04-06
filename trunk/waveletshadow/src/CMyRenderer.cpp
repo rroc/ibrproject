@@ -65,12 +65,12 @@ CMyRenderer::~CMyRenderer()
 
 void CMyRenderer::LoadTextures()
 	{
-	iTextures.push_back( loadTGATexture("church_roof.tga") );
-	iTextures.push_back( loadTGATexture("church_left.tga") );
-	iTextures.push_back( loadTGATexture("church_front.tga") );
-	iTextures.push_back( loadTGATexture("church_right.tga") );
-	iTextures.push_back( loadTGATexture("church_floor.tga") );
-	iTextures.push_back( loadTGATexture("church_back.tga") );
+	iTextures.push_back( LoadTGATexture("church_roof.tga") );
+	iTextures.push_back( LoadTGATexture("church_left.tga") );
+	iTextures.push_back( LoadTGATexture("church_front.tga") );
+	iTextures.push_back( LoadTGATexture("church_right.tga") );
+	iTextures.push_back( LoadTGATexture("church_floor.tga") );
+	iTextures.push_back( LoadTGATexture("church_back.tga") );
 
 	//iTextures.push_back( loadCubeMapTextures(
 	//										  "church_roof.tga"
@@ -113,7 +113,7 @@ void CMyRenderer::InitMain()
 
 	//Do the Precalculated Radiance Transfer
 #ifdef USE_OPENMP
-	PreCalculateDirectLight();
+//	PreCalculateDirectLight();
 //	WriteTGA( "test.tga", 30, 30, reinterpret_cast<char*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) ) );
 #endif
 
@@ -386,13 +386,15 @@ void CMyRenderer::RenderScene()
 	glVertex3f( 0, 0, 0 );
 	glVertex3f( 0, 1, 0  );
 
-	glColor3f( 0, 1, 0 );
+	glColor3f( 0, 1, 0 ); 
 	glVertex3f( 0, 0, 0 );
 	glVertex3f( 0, 0, 1  );
 	glEnd();
 
 	DrawLightSphere();
 	*/
+	DrawMap();
+
 	ShowFPS();
 
 	glutSwapBuffers();
@@ -961,6 +963,103 @@ void CMyRenderer::DrawCubemap()
 	//glEnable(GL_CULL_FACE);
 	//glEnable(GL_LIGHTING );
 	}
+
+
+
+void CMyRenderer::DrawMap()
+	{
+	glDisable(GL_LIGHTING);
+	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
+	//glDisable(GL_DEPTH_TEST);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+
+	gluOrtho2D( 0, iScreenWidth, 0, iScreenHeight );
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+//	glTranslatef(0.375f, 1.5f, 0.0f);
+
+	glColor3f(1.0, 1.0, 1.0 );
+
+	const int size = 64;
+	const int size2 = size*2;
+	const int translateY = iScreenHeight - (20 + size );
+	const int translateX = iScreenWidth-(size2+20);
+
+	glEnable( GL_TEXTURE_2D );
+
+	//roof
+	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
+	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
+	glTexCoord2f(1.0f,1.0f); glVertex2i( size+translateX,	size+translateY );
+	glTexCoord2f(0,1.0f);	 glVertex2i( translateX,		size+translateY );
+	glEnd();
+
+	//left
+	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
+	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
+	glTexCoord2f(1.0f,1.0f);glVertex2i( translateX,			translateY);
+	glTexCoord2f(0,1.0f);	glVertex2i(-size+translateX,	translateY);
+	glEnd();
+
+	//front
+	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
+	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
+	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	translateY);
+	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		translateY);
+	glEnd();
+
+	//right
+	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
+	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
+	glTexCoord2f(1.0f,1.0f);glVertex2i(size2 + translateX,	translateY);
+	glTexCoord2f(0,1.0f);	glVertex2i(size+translateX,		translateY);
+	glEnd();
+
+	//floor
+	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
+	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
+	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	-size+translateY);
+	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		-size+translateY);
+	glEnd();
+
+	//back
+	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
+	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
+	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	-size2 + translateY);
+	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		-size2 + translateY);
+	glEnd();
+
+	glDisable( GL_TEXTURE_2D );
+
+	glDepthFunc(GL_LESS);	// normal depth buffering
+	//glEnable(GL_DEPTH_TEST);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	}
+
+
 
 
 void CMyRenderer::DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3])
