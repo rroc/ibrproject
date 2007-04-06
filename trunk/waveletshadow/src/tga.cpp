@@ -629,6 +629,35 @@ loadTGATexture (const char *filename)
 	return tex_id;
 	}
 
+void WriteTGA(const char* aFileName, int width, int height, char* data )
+	{
+		FILE *outputFile;
+		outputFile = fopen(aFileName, "wb");
+		if(outputFile==NULL) return;
+
+		tga_header_t header;
+		header.id_lenght		= 0x00; //byte
+		header.colormap_type	= 0x00; //byte
+		header.image_type		= 0x02; //byte
+
+		header.cm_first_entry	= 0x0000; //short
+		header.cm_length		= 0x0000; //short
+		header.cm_size			= 0x00; //byte
+
+		header.x_origin			= 0x0000; //short
+		header.y_origin			= 0x0000; //short
+
+		header.width			= width; //short
+		header.height			= height;//short
+
+		header.pixel_depth		= 0x20; //byte (32bits = 0x20)
+		header.image_descriptor = 0x08; //byte
+
+		fwrite( &header, sizeof(tga_header_t),1,outputFile );
+
+		fwrite( data, 4, width*height, outputFile );
+		fclose(outputFile);
+	}
 
 
 GLuint loadCubeMapTextures(

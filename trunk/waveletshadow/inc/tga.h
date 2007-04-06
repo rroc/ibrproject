@@ -48,6 +48,7 @@ typedef struct
 
 
 #pragma pack(push, 1)
+
 /* tga header */
 typedef struct
 {
@@ -69,23 +70,27 @@ typedef struct
   GLubyte image_descriptor;   /* 24 bits = 0x00; 32 bits = 0x80 */
 
 } tga_header_t;
+
 #pragma pack(pop)
 
-void GetTextureInfo (tga_header_t *header, gl_texture_t *texinfo);
-void ReadTGA8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo);
-void ReadTGA16bits (FILE *fp, gl_texture_t *texinfo);
-void ReadTGA24bits (FILE *fp, gl_texture_t *texinfo);
-void ReadTGA32bits (FILE *fp, gl_texture_t *texinfo);
-void ReadTGAgray8bits (FILE *fp, gl_texture_t *texinfo);
-void ReadTGAgray16bits (FILE *fp, gl_texture_t *texinfo);
-void ReadTGA8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo);
-void ReadTGA16bitsRLE (FILE *fp, gl_texture_t *texinfo);
-void ReadTGA24bitsRLE (FILE *fp, gl_texture_t *texinfo);
-void ReadTGA32bitsRLE (FILE *fp, gl_texture_t *texinfo);
-void ReadTGAgray8bitsRLE (FILE *fp, gl_texture_t *texinfo);
-void ReadTGAgray16bitsRLE (FILE *fp, gl_texture_t *texinfo);
-gl_texture_t * ReadTGAFile (const char *filename);
-GLuint loadTGATexture(const char *filename);
-GLuint loadCubeMapTextures( const char *filename1, const char *filename2, const char *filename3, const char *filename4, const char *filename5, const char *filename6);
+void GetTextureInfo (tga_header_t* header, gl_texture_t* texinfo);
+void ReadTGA8bits (FILE* fp, GLubyte* colormap, gl_texture_t* texinfo);
+void ReadTGA16bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTGA24bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTGA32bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTGAgray8bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTGAgray16bits (FILE* fp, gl_texture_t* texinfo);
+void ReadTGA8bitsRLE (FILE* fp, GLubyte* colormap, gl_texture_t* texinfo);
+void ReadTGA16bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTGA24bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTGA32bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTGAgray8bitsRLE (FILE* fp, gl_texture_t* texinfo);
+void ReadTGAgray16bitsRLE (FILE* fp, gl_texture_t* texinfo);
+gl_texture_t*  ReadTGAFile (const char* filename);
+GLuint loadTGATexture(const char* filename);
+GLuint loadCubeMapTextures( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
+
+
+void WriteTGA( const char* aFileName, int width, int height, char* data );
 
 #endif
