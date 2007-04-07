@@ -97,7 +97,12 @@ class CMyRenderer
 
 		void DrawSceneNode( CSceneNode* aNode );
 		void ApplySceneTransformations( CSceneNode* aNode );
+		
+		void PrecomputedRadianceTransfer();
 		void PreCalculateDirectLight();
+		bool ValidPRTDataExists();
+		void LoadPRTData();
+		void SavePRTData();
 
 		void TransformMesh( CMesh* aMesh );
 		void MultMatrixVect(const double aMatrix[16], TVector3* aVector);
@@ -116,6 +121,9 @@ class CMyRenderer
 		CSceneRotation* iSceneRotation;
 		TVector3 iRotationAnimation;
 
+		int iCubeMapVertex;
+		GLenum iWireFrame;
+
 	//PRIVATE DATA
 	//------------------
 	private:
@@ -123,6 +131,7 @@ class CMyRenderer
 		int iScreenWidth;	//< The width of the screen
 
 		vector<int> iTextures;
+		int iVertexMapTextures[6];
 
 		CSceneNode* iScene;
 		vector<CMesh*> iMeshList;

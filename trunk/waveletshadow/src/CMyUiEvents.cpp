@@ -37,6 +37,21 @@ void CMyUiEvents::ProcessNormalKeys(unsigned char key, int x, int y)
 			iRenderer->iRotationAnimation.iX = 0;
 			iRenderer->iRotationAnimation.iY = 0;
 			break;
+		//ENTER
+		case 13:
+			iRenderer->iCubeMapVertex++;
+			break;
+		case 'w':
+		case 'W':
+			if(iRenderer->iWireFrame == GL_TRIANGLES)
+				{
+				iRenderer->iWireFrame = GL_LINE_LOOP;
+				}
+			else
+				{
+				iRenderer->iWireFrame = GL_TRIANGLES;
+				}			
+			break;
 		//undefined key
 		default:
 			break;

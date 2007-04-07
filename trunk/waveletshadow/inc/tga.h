@@ -31,6 +31,7 @@
 #define Texture_H
 
 #include "basic.h"
+#include "TVector3.h"
 
 /* OpenGL texture info */
 typedef struct
@@ -90,6 +91,9 @@ gl_texture_t*  ReadTextureFile (const char* filename);
 
 GLuint LoadTGATexture(const char* filename);
 void WriteTGATexture( const char* aFileName, int width, int height, char* data );
+
+GLuint CreateTexture( float* data, int width, int height );
+GLuint CreateTexture( TVector3* data, int width, int height );
 
 GLuint LoadCubeMapTextures( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
 

@@ -658,6 +658,67 @@ void WriteTGATexture(const char* aFileName, int width, int height, char* data )
 		fclose(outputFile);
 	}
 
+GLuint CreateTexture(float* data, int width, int height )
+	{
+	//GLubyte* checkImage = new GLubyte[ width*height*4 ];
+
+	//for (int i=0,endI=width*height;i<endI;i++)
+	//	{
+	//	int val = 0xFF * *(data+i);
+	//	*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+	//	*(checkImage+i*4+1) = (GLubyte)val; //green
+	//	*(checkImage+i*4+2) = (GLubyte)val; //blue
+	//	*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+	//	}
+//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	GLuint texId; 
+	glGenTextures(1, &texId);
+	glBindTexture(GL_TEXTURE_2D, texId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 1, GL_LUMINANCE, GL_FLOAT, data );
+
+//	delete[] checkImage;
+
+	printf("Created a luminance texture: %d\n",texId);
+	return(texId);
+	}
+
+GLuint CreateTexture(TVector3* data, int width, int height )
+	{
+	gl_texture_t* texInfo = (gl_texture_t *)malloc (sizeof (gl_texture_t));
+	texInfo->width  = width;
+	texInfo->height = height;
+
+	texInfo->format = GL_RGBA;
+	texInfo->internalFormat = 4;
+
+	glGenTextures (1, &texInfo->id);
+	glBindTexture (GL_TEXTURE_2D, texInfo->id);
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);/*GL_CLAMP, GL_REPEAT*/
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	glTexImage2D( GL_TEXTURE_2D
+		, 0
+		, texInfo->internalFormat
+		, texInfo->width
+		, texInfo->height
+		, 0
+		, texInfo->format
+		, GL_UNSIGNED_BYTE
+		, data
+		);
+
+	int texId = texInfo->id;
+
+	free (texInfo);
+	return(texId);
+	}
+
 
 GLuint LoadCubeMapTextures(
 						   const char *filename1
@@ -784,3 +845,4 @@ GLuint LoadCubeMapTextures(
 
 	return tex_id;
 	}
+
