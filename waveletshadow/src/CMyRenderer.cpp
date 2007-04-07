@@ -35,6 +35,8 @@ CMyRenderer::CMyRenderer( const int aWidth, const int aHeight )
 , iTimebase(0)
 , iLightingModelName("shadowed")
 , iRotationAnimation( 0, 0, 0)
+, iCubeMapVertex(0)
+, iWireFrame(GL_TRIANGLES)
 	{
 	InitMain();
 	}
@@ -96,14 +98,6 @@ void CMyRenderer::InitMain()
 
 	glMatrixMode(GL_MODELVIEW);
 
-
-//	InitializeSamplingData();
-
-	//SETUP Precalculater transfer functions
-	//iSampleData = new CSHSamples( 1000, 9 );
-	//iLightData  = new CLights();
-	//iLightData->createCoefficients( iSampleData );
-
 	//Construct the scenegraph
 	CreateScene();
 	
@@ -111,11 +105,25 @@ void CMyRenderer::InitMain()
 
 	InitLights();
 
-	//Do the Precalculated Radiance Transfer
-#ifdef USE_OPENMP
-//	PreCalculateDirectLight();
-//	WriteTGA( "test.tga", 30, 30, reinterpret_cast<char*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) ) );
-#endif
+	PrecomputedRadianceTransfer();
+
+	int offSet = KSamplingResolution*KSamplingResolution;
+
+//	int vertex = 0;
+	iVertexMapTextures[0] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0)		), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[1] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[2] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2)), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[3] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3)), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[4] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4)), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[5] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5)), KSamplingResolution, KSamplingResolution );
+
+	iTextures.push_back( iVertexMapTextures[0] );
+	iTextures.push_back( iVertexMapTextures[1] );
+	iTextures.push_back( iVertexMapTextures[2] );
+	iTextures.push_back( iVertexMapTextures[3] );
+	iTextures.push_back( iVertexMapTextures[4] );
+	iTextures.push_back( iVertexMapTextures[5] );
+
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
@@ -140,47 +148,47 @@ int CMyRenderer::InitializeSamplingData()
 					case 0: //roof
 						iSampleData.push_back( TVector3( 
 														   (u-0.5)*2.0f
-														,  1.0
-														, -(v-0.5)*2.0f 
+														,  1.0f
+														,  -(v-0.5)*-2.0f 
 														) 
 													);
 						break;
 					case 1: //left
 						iSampleData.push_back( TVector3( 
 														  -1.0f
-														, -(v-0.5)*2.0f
-														, -(u-0.5)*2.0f 
+														, -(v-0.5)*-2.0f
+														, (u-0.5)*-2.0f 
 														)
 													);
 						break;
 					case 2: //front 
 						iSampleData.push_back( TVector3( 
-														   (u-0.5)*2.0f
-														, -(v-0.5)*2.0f
+														   (u-0.5)* 2.0f
+														,  -(v-0.5)*-2.0f
 														, -1.0f 
 														)
 													);
 						break;
 					case 3: //right
 						iSampleData.push_back( TVector3( 
-														   1.0
-														, -(v-0.5)*2.0f
-														,  (u-0.5)*2.0f 
+														   1.0f
+														,  -(v-0.5)*-2.0f
+														,  (u-0.5)* 2.0f 
 														)
 													);
 						break;
 					case 4: //floor
 						iSampleData.push_back( TVector3( 
 														   (u-0.5)*2.0f
-														, -1.0
-														,  (v-0.5)*2.0f 
+														, -1.0f
+														,  -(v-0.5)*2.0f 
 														)
 													);
 						break;
 					case 5: //back
 						iSampleData.push_back( TVector3( 
 														  (u-0.5)*2.0f
-														, (v-0.5)*2.0f
+														, -(v-0.5)*2.0f
 														, 1.0f 
 														)
 													);
@@ -478,7 +486,7 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 		t = aMesh->iTriangles.at(triangleIndex);
 
 		//check that there is enough vertices in the vertices list
-		if( (t.iV1<=vertCount ) && (t.iV2<=vertCount) && (t.iV3<=vertCount) )
+//		if( (t.iV1<=vertCount ) && (t.iV2<=vertCount) && (t.iV3<=vertCount) )
 			{
 			//VERTICES
 			vx[0] = aMesh->iVertices.at(t.iV1);
@@ -498,11 +506,140 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 		}
 	}
 
+void CMyRenderer::PrecomputedRadianceTransfer()
+	{
+	printf("\nPrecomputed Radiance Transfer...\n");
 
+	if ( ValidPRTDataExists() )
+		{
+		LoadPRTData();
+		return;
+		} 
+	else
+		{
+		PreCalculateDirectLight();
+		SavePRTData();
 
+		//iTextures.push_back( 
+		//				CreateTexture( 
+		//					  reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) )
+		//					, 32
+		//					, 32
+		//					)
+		//				);
 
+		//	WriteTGA( "test.tga", 30, 30, reinterpret_cast<char*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) ) );
+		}
+	}
 
+bool CMyRenderer::ValidPRTDataExists()
+	{
+	std::ifstream infile( KDataFileName.c_str(), std::ios::in | std::ios::binary);
+	if(!infile.is_open())
+		{
+		return false;
+		}
 
+	//Are these correct
+	int numOfSamples;
+	int numOfVertices;
+
+	infile.read((char *)&numOfSamples,		sizeof(int));
+	infile.read((char *)&numOfVertices,	sizeof(int));
+
+	if( numOfSamples!= (KSamplingResolution*KSamplingResolution*6) || numOfVertices!=iVerticesInScene )
+		{
+		printf("Data mismatch with the existing data file...\n");
+		infile.close();
+		return false;
+		}
+	
+	infile.close();
+	return true;
+	}
+
+void CMyRenderer::LoadPRTData()
+	{
+	std::ifstream infile( KDataFileName.c_str(), std::ios::in | std::ios::binary);
+	if(!infile.is_open())
+		{
+		printf("File access error while loading.\n");
+		exit(-1);
+		}
+
+	//read the header (again!)
+	int numOfSamples;
+	int numOfTotalVertices;
+	infile.read((char *)&numOfSamples,		sizeof(int));
+	infile.read((char *)&numOfTotalVertices,	sizeof(int));
+
+	printf("Loading from file (\"%s\")...\n", KDataFileName.c_str() );
+
+	int datasize(0);
+
+	//for all the objects in the scene...
+	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
+		{
+		CMesh* currentMesh = iSceneGraph.at( i );
+		int numvertices=currentMesh->iVertices.size();;
+		currentMesh->iVisibilityCoefficients.clear();
+		currentMesh->iVisibilityCoefficients.resize(numvertices);
+
+		//...and for all the vertices in objects...
+		float coefficient;
+		for(int j=0; j<numvertices; ++j)
+			{
+			vector<float> vertexVisibilityCoefficients;
+			//load the visibility coefficients
+			for(int k=0;k<numOfSamples;k++)
+				{
+				infile.read((char *)&coefficient, sizeof(float));
+				vertexVisibilityCoefficients.push_back( coefficient );
+				datasize++;
+				}
+			currentMesh->iVisibilityCoefficients.at(j) = vertexVisibilityCoefficients;
+			}
+		}
+	infile.close();
+	printf("Loaded %d bytes from file OK.\n\n", datasize*sizeof(float));
+	return;
+	}
+
+void CMyRenderer::SavePRTData()
+	{
+	printf("Saving PRT Data to a file(\"%s\").\n", KDataFileName.c_str() );
+	std::ofstream outFile( KDataFileName.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+
+	//Create header
+	int numOfSamples( KSamplingResolution*KSamplingResolution*6 );
+	int numOfTotalVertices( iVerticesInScene );
+	outFile.write((const char *)&numOfSamples, sizeof(int));
+	outFile.write((const char *)&numOfTotalVertices, sizeof(int));
+
+	printf(" - Samples/Vertices/Objects: %d/%d/%d\n", numOfSamples, numOfTotalVertices, iSceneGraph.size() );
+
+	//for all the objects in the scene...
+	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
+		{
+//		printf(" O: %d\n", i );
+		CMesh* currentMesh = iSceneGraph.at( i );
+		int numVertices=currentMesh->iVertices.size();
+
+		//...and for all the vertices in objects...
+		for(int j=0; j<numVertices; ++j)
+			{
+//			printf("  V: %d/%d\n", j, numVertices );
+			//load the visibility coefficients
+			for(int k=0;k<numOfSamples;k++)
+				{
+//				printf("   S: %d/%d\n", k, numOfSamples );
+				outFile.write((char *)&currentMesh->iVisibilityCoefficients.at(j).at(k), sizeof(float));
+				}
+			}
+		}
+	outFile.close();
+	printf("\nSaving OK.\n");
+	}
 
 
 void CMyRenderer::PreCalculateDirectLight()
@@ -528,7 +665,6 @@ void CMyRenderer::PreCalculateDirectLight()
 
 	static int vertexCount(0);
 	float dot(0.0);
-	float contribution(0.0);
 	bool rayBlocked;
 
 	printf("Calculating vertex:         " );
@@ -549,7 +685,7 @@ void CMyRenderer::PreCalculateDirectLight()
 
 		//FOR EACH VERTEX...
 #ifdef USE_OPENMP
-#pragma omp parallel for shared(vertexCount, numOfVertices)
+#pragma omp parallel for shared(vertexCount) private( ray, rayBlocked, dot )
 #endif
 		for( int j=0; j<numOfVertices; ++j )
 			{
@@ -560,6 +696,7 @@ void CMyRenderer::PreCalculateDirectLight()
 			// j is current vertex
 			// k is current sample
 			vector<float> vertexVisibility;
+			vertexVisibility.resize(numberOfSamples, 0.0f );
 
 			for(int k=0; k<numberOfSamples; ++k)
 				{
@@ -571,9 +708,8 @@ void CMyRenderer::PreCalculateDirectLight()
 				if( dot>0.0 )
 					{
 					//Fill in a RAY structure for this sample
-					ray.Set(  
-						currentMesh->iVertices.at(j) //+ currentMesh->iVertexNormals.at(j)*KEpsilon*2.0
-						, iSampleData.at(k) );
+					ray.Set( currentMesh->iVertices.at(j) + currentMesh->iVertexNormals.at(j)*KEpsilon*2.0
+							, iSampleData.at(k) );
 
 					//See if the ray is blocked by any object
 					rayBlocked = IsRayBlocked( &ray );
@@ -581,14 +717,18 @@ void CMyRenderer::PreCalculateDirectLight()
 					//NOT in the shadow:
 					if(!rayBlocked)
 						{
-						vertexVisibility.push_back( dot );
+						vertexVisibility.at(k) = ( dot );
 						}
 					//SHADOWED
-					else
-						{
-						vertexVisibility.push_back( 0.0 );
-						}
-					}					
+					//else
+					//	{
+					//	vertexVisibility.push_back( 0.0 );
+					//	}
+					}	
+				//else
+				//	{
+				//	vertexVisibility.push_back( 0.0 );
+				//	}
 				}
 			//add visibility list to current vertex
 			currentMesh->iVisibilityCoefficients.at(j) = vertexVisibility;
@@ -599,222 +739,22 @@ void CMyRenderer::PreCalculateDirectLight()
 	time(&end1);
 	currenttime=localtime(&end1);
 	printf("\n - End Time: %s, Diff Total: %f\n", asctime(currenttime), difftime(end1,start1) );
-	printf("Pre-calc Ready.\n");
+
+	//CHECK
+	for(int i=0; i<numObjects; ++i)
+		{
+		currentMesh = iSceneGraph.at( i );
+		int numOfVertices =currentMesh->iVertices.size();
+
+		//FOR EACH VERTEX...
+		for( int j=0; j<numOfVertices; ++j )
+			{
+			printf("Object: %d, Vert/Coeffs: %d / %d\n", i, j, currentMesh->iVisibilityCoefficients.at(j).size() );
+			}
+		}
+	printf("Pre-calc Ready.\n\n");
 	}
 
-
-/*
-int numFunctions = iSampleData->iNumberOfFunctions;//(iSampleData->iNumberOfBands * iSampleData->iNumberOfBands); //aNumBands*aNumBands;
-int numObjects = iSceneGraph.size(); //objects.size();
-CRay ray;
-
-printf("\nProcessing light co-efficients...\n");
-
-//LOAD FROM FILE
-//Is there a file containing the coefficients, or do they need to be regenerated?
-bool regeneratecoeffs=false;
-
-std::ifstream infile( KDataFileName.c_str(), std::ios::in | std::ios::binary);
-
-if(!infile.is_open())
-{
-//log::instance()->outputmisc("unable to open directcoeffs.dat, regenerating coefficients...");
-regeneratecoeffs=true;
-}
-
-
-//Are the number of bands and aSamples in the file correct?
-if(!regeneratecoeffs)
-{
-int numfilebands, numfilesamples;
-
-infile.read((char *)&numfilebands,		sizeof(int));
-infile.read((char *)&numfilesamples,	sizeof(int));
-
-if(numfilebands!=iSampleData->iNumberOfBands || numfilesamples!=iSampleData->iNumberOfSamples)
-{
-printf("Data mismatch with the existing data file...\n");
-//			log::instance()->outputmisc("directcoeffs.dat has different number of bands/asamples, regenerating coefficients...");
-regeneratecoeffs=true;
-infile.close();
-}
-}
-
-//if the file is good, read in the coefficients
-if(!regeneratecoeffs)
-{
-printf("Loading from file (\"%s\")...\n", KDataFileName.c_str() );
-
-for(int i=0; i<numObjects; ++i)
-{
-CMesh* currentMesh = iSceneGraph.at( i );
-
-int numvertices=currentMesh->iVertices.size();;
-
-currentMesh->iVertexShadowedLightCoefficients.clear();
-currentMesh->iVertexUnshadowedLightCoefficients.clear();
-
-currentMesh->iVertexShadowedLightCoefficients.resize(numvertices);
-currentMesh->iVertexUnshadowedLightCoefficients.resize(numvertices);
-for( int j=0; j<numvertices; j++ )
-{
-currentMesh->iVertexShadowedLightCoefficients.at(j).clear();
-currentMesh->iVertexUnshadowedLightCoefficients.at(j).clear();
-}
-
-
-float coefficient;
-for(int j=0; j<numvertices; ++j)
-{
-
-for(int k=0;k<numFunctions;k++)
-{
-infile.read((char *)&coefficient, sizeof(float));
-currentMesh->iVertexUnshadowedLightCoefficients.at(j).push_back( coefficient );
-}
-
-for(int k=0;k<numFunctions;k++)
-{
-infile.read ((char *)&coefficient, sizeof(float));
-currentMesh->iVertexShadowedLightCoefficients.at(j).push_back( coefficient );
-}
-}
-}
-infile.close();
-printf("Loaded from file OK.\n");
-return;
-}
-
-printf("Start calculating the co-efficients...\n");
-
-printf(" - Vertices in the scene: %d\n", iVerticesInScene );
-printf(" - Samples per vertex: %d\n", iSampleData->iNumberOfSamples );
-printf(" - Number of functions contributing per sample: %d\n", numFunctions );
-
-time_t start1;
-time_t end1;
-struct tm* currenttime;
-time(&start1);
-currenttime=localtime(&start1);
-
-printf(" - Start Time: %s\n", asctime(currenttime) );
-
-//GENERATE COEFFs
-//Otherwise, regenerate the coefficients
-//Loop through the vertices and project the transfer function into SH space
-
-float multiplier = ( FOURPI / iSampleData->iNumberOfSamples );
-int vertexCount(0);
-float dot(0.0);
-float contribution(0.0);
-bool rayBlocked;
-vector<float> initCoefficients;
-initCoefficients.resize( numFunctions, 0.0 );
-
-printf("Calculating vertex:         " );
-
-CMesh* currentMesh;
-//FOR EACH OBJECT...
-for(int i=0; i<numObjects; ++i)
-{
-//SH_OBJECT * currentObject=objects[i];
-currentMesh = iSceneGraph.at( i );
-
-currentMesh->iVertexShadowedLightCoefficients.clear();
-currentMesh->iVertexUnshadowedLightCoefficients.clear();
-
-
-
-//FOR EACH VERTEX...
-for( int j=0, endj=currentMesh->iVertices.size(); j<endj; ++j )
-{
-printf("\b\b\b\b\b\b\b\b%8d", ++vertexCount );
-
-currentMesh->iVertexShadowedLightCoefficients.push_back(   initCoefficients );
-currentMesh->iVertexUnshadowedLightCoefficients.push_back( initCoefficients );
-
-//SAMPLES FOR EACH VERTEX
-// i is current object
-// j is cuurent vertex
-// k is current sample
-for(int k=0, endk=iSampleData->iNumberOfSamples; k<endk; ++k)
-{
-//Calculate cosine term for this sample
-dot = iSampleData->iVector.at( k ).dot( currentMesh->iVertexNormals.at(j) );
-
-//UPPER HEMISPHERE?
-//Clamp to [0, 1]
-if( dot>0.0 )
-{
-//Fill in a RAY structure for this sample
-ray.Set(  currentMesh->iVertices.at(j) //+ currentMesh->iVertexNormals.at(j)*KEpsilon*2.0
-, iSampleData->iVector.at(k) );
-
-//See if the ray is blocked by any object
-rayBlocked = IsRayBlocked( &ray );
-
-//Add the contribution of this sample to the coefficients
-for(int l=0; l<numFunctions; ++l)
-{
-contribution = dot * iSampleData->iFunctionValues.at(k).at(l);
-currentMesh->iVertexUnshadowedLightCoefficients.at( j ).at( l ) += contribution;
-
-//NOT in the shadow:
-if(!rayBlocked)
-{
-currentMesh->iVertexShadowedLightCoefficients.at( j ).at( l ) += contribution;
-}
-}
-}
-}
-
-//Rescale the coefficients
-for(int l=0; l<numFunctions; ++l)
-{
-currentMesh->iVertexUnshadowedLightCoefficients.at( j ).at( l ) *= multiplier;
-currentMesh->iVertexShadowedLightCoefficients.at( j ).at( l )	*= multiplier;
-}
-}
-}
-
-//end time:
-time(&end1);
-currenttime=localtime(&end1);
-printf("\n - End Time: %s, Diff Total: %f\n", asctime(currenttime), difftime(end1,start1) );
-printf("Pre-calc Ready.\n");
-
-
-//SAVE THE COEFFICIENTS TO A FILE
-printf("Saving Data to a file(\"%s\").\n", KDataFileName.c_str() );
-std::ofstream outFile( KDataFileName.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-
-//First save the number of bands and aSamples
-outFile.write((const char *)&iSampleData->iNumberOfBands, sizeof(int));
-outFile.write((const char *)&iSampleData->iNumberOfSamples, sizeof(int));
-
-//Loop through the vertices and save the coefficients for each
-for(int i=0; i<numObjects; ++i)
-{
-CMesh* currentMesh = iSceneGraph.at( i );
-const int numVertices=currentMesh->iVertices.size();
-
-for(int j=0; j<numVertices; ++j)
-{
-for(int k=0;k<numFunctions;k++)
-{
-outFile.write((char *)&currentMesh->iVertexUnshadowedLightCoefficients.at(j).at(k), sizeof(float));
-}
-
-for(int k=0;k<numFunctions;k++)
-{
-outFile.write((char *)&currentMesh->iVertexShadowedLightCoefficients.at(j).at(k), sizeof(float));
-}
-}
-}
-outFile.close();
-printf("Saving OK.\n");
-
-*/
 
 void CMyRenderer::RotateLights( float aChangeTheta, float aChangePhi )
 	{
@@ -844,11 +784,6 @@ bool CMyRenderer::IsRayBlocked( CRay* aRay )
 					,&iSceneGraph.at(i)->iVertices.at( triangle.iV2 )
 					,&iSceneGraph.at(i)->iVertices.at( triangle.iV3 )
 					};
-				//COULD BE REMOVED(if a small epsilon is used in the ray definition)Ignore matches with triangles with this vertex
-				if(    ( *list[0] != aRay->iStartPoint )
-					&& ( *list[1] != aRay->iStartPoint )
-					&& ( *list[2] != aRay->iStartPoint )
-					)
 					{
 					if( aRay->IntersectTriangle2( list, &iSceneGraph.at(i)->iFaceNormals.at(j) ) )
 						{
@@ -881,79 +816,55 @@ void CMyRenderer::DrawCubemap()
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(minEps,maxEps);
-	glVertex3f(-size,size,size);
-	glTexCoord2f(minEps,minEps);
-	glVertex3f(-size,size,-size);
-	glTexCoord2f(maxEps,minEps);
-	glVertex3f(size,size,-size);
-	glTexCoord2f(maxEps,maxEps);
-	glVertex3f(size,size,size);
+	glTexCoord2f(minEps,maxEps);	glVertex3f(-size,size,size);
+	glTexCoord2f(minEps,minEps);	glVertex3f(-size,size,-size);
+	glTexCoord2f(maxEps,minEps);	glVertex3f(size,size,-size);
+	glTexCoord2f(maxEps,maxEps);	glVertex3f(size,size,size);
 	glEnd();
 
 	//left
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(1) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(minEps,maxEps);
-	glVertex3f(-size,size,size);
-	glTexCoord2f(minEps,minEps);
-	glVertex3f(-size,-size,size);
-	glTexCoord2f(maxEps,minEps);
-	glVertex3f(-size,-size,-size);
-	glTexCoord2f(maxEps,maxEps);
-	glVertex3f(-size,size,-size);
+	glTexCoord2f(minEps,maxEps);	glVertex3f(-size,size,size);
+	glTexCoord2f(minEps,minEps);	glVertex3f(-size,-size,size);
+	glTexCoord2f(maxEps,minEps);	glVertex3f(-size,-size,-size);
+	glTexCoord2f(maxEps,maxEps);	glVertex3f(-size,size,-size);
 	glEnd();
 
 	//front 
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(2) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(minEps,maxEps);
-	glVertex3f(-size,size,-size);
-	glTexCoord2f(minEps,minEps);
-	glVertex3f(-size,-size,-size);
-	glTexCoord2f(maxEps,minEps);
-	glVertex3f(size,-size,-size);
-	glTexCoord2f(maxEps,maxEps);
-	glVertex3f(size,size,-size);
+	glTexCoord2f(minEps,maxEps);	glVertex3f(-size,size,-size);
+	glTexCoord2f(minEps,minEps);	glVertex3f(-size,-size,-size);
+	glTexCoord2f(maxEps,minEps);	glVertex3f(size,-size,-size);
+	glTexCoord2f(maxEps,maxEps);	glVertex3f(size,size,-size);
 	glEnd();
 
 	//right
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(3) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(minEps,maxEps);
-	glVertex3f(size,size,-size);
-	glTexCoord2f(minEps,minEps);
-	glVertex3f(size,-size,-size);
-	glTexCoord2f(maxEps,minEps);
-	glVertex3f(size,-size,size);
-	glTexCoord2f(maxEps,maxEps);
-	glVertex3f(size,size,size);
+	glTexCoord2f(minEps,maxEps);	glVertex3f(size,size,-size);
+	glTexCoord2f(minEps,minEps);	glVertex3f(size,-size,-size);
+	glTexCoord2f(maxEps,minEps);	glVertex3f(size,-size,size);
+	glTexCoord2f(maxEps,maxEps);	glVertex3f(size,size,size);
 	glEnd();
 
 	//fLoor
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(4) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(minEps,maxEps);
-	glVertex3f(-size,-size,-size);
-	glTexCoord2f(minEps,minEps);	
-	glVertex3f(-size,-size,size);
-	glTexCoord2f(maxEps,minEps);
-	glVertex3f(size,-size,size);
-	glTexCoord2f(maxEps,maxEps);
-	glVertex3f(size,-size,-size);
+	glTexCoord2f(minEps,maxEps);	glVertex3f(-size,-size,-size);
+	glTexCoord2f(minEps,minEps);	glVertex3f(-size,-size,size);
+	glTexCoord2f(maxEps,minEps);	glVertex3f(size,-size,size);
+	glTexCoord2f(maxEps,maxEps);	glVertex3f(size,-size,-size);
 	glEnd();
 
 	//back
 	glBindTexture( GL_TEXTURE_2D, iTextures.at(5) );
 	glBegin(GL_QUADS);
-	glTexCoord2f(minEps,maxEps);
-	glVertex3f(-size,-size,size);
-	glTexCoord2f(minEps,minEps);
-	glVertex3f(-size,size,size);
-	glTexCoord2f(maxEps,minEps);
-	glVertex3f(size,size,size);
-	glTexCoord2f(maxEps,maxEps);
-	glVertex3f(size,-size,size);
+	glTexCoord2f(minEps,maxEps);	glVertex3f(-size,-size,size);
+	glTexCoord2f(minEps,minEps);	glVertex3f(-size,size,size);
+	glTexCoord2f(maxEps,minEps);	glVertex3f(size,size,size);
+	glTexCoord2f(maxEps,maxEps);	glVertex3f(size,-size,size);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -969,6 +880,17 @@ void CMyRenderer::DrawCubemap()
 void CMyRenderer::DrawMap()
 	{
 	glDisable(GL_LIGHTING);
+
+	if(iCubeMapVertex > iSceneGraph.at(0)->iVisibilityCoefficients.size())
+		{
+		iCubeMapVertex = 0;
+		}
+
+	glColor3f( 1.0f,1.0f,0.0);
+	glTranslatef( iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iX, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iY, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iZ );
+	glutSolidSphere(0.05f, 16,16);
+	
+
 	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
 	//glDisable(GL_DEPTH_TEST);
 
@@ -993,8 +915,11 @@ void CMyRenderer::DrawMap()
 
 	glEnable( GL_TEXTURE_2D );
 
+	int offSet = KSamplingResolution*KSamplingResolution;
 	//roof
-	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
+	
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
 	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
@@ -1003,7 +928,8 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//left
-	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
@@ -1012,7 +938,8 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//front
-	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
@@ -1021,7 +948,8 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//right
-	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
@@ -1030,7 +958,8 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//floor
-	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
@@ -1039,7 +968,8 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//back
-	glBindTexture( GL_TEXTURE_2D, iTextures.at(0) );
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
@@ -1064,51 +994,19 @@ void CMyRenderer::DrawMap()
 
 void CMyRenderer::DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3])
 	{
-	//	printf("Draw triangle\n");
-
-	//	glColor3f( 1,1,1 );
-
-	//	float a = 0.0;//aVx[0].iX;
-
-	//	a = aVx->iX; //0.001;
-	glBegin(GL_TRIANGLES);
-	/*
-	glVertex3f( aVx->iX, aVx->iY, aVx->iZ);
-	//	glVertex3f( (aVx+1)->iX, (aVx+1)->iY, (aVx+1)->iZ);
-	//	glVertex3f( (aVx+2)->iX, (aVx+2)->iY, (aVx+2)->iZ);
-
-	glVertex3f( 0.5,1,0);
-	glVertex3f( 0.51,1,0);
-	//	glVertex3f( (aVx+2)->iX, (aVx+2)->iY, (aVx+2)->iZ);
-
-
-	glVertex3f( aVx[0].iX, aVx[0].iY, aVx[0].iZ );
-	glVertex3f( aVx[1].iX, aVx[1].iY, aVx[1].iZ );
-	glVertex3f( aVx[2].iX, aVx[2].iY, aVx[2].iZ );
-	*/
-	//	printf("[%f, %f, %f] [%f, %f, %f] [%f, %f, %f]\n", aVx->iX,aVx->iY,aVx->iZ, (aVx+1)->iX, (aVx+1)->iY, (aVx+1)->iZ,  (aVx+2)->iX, (aVx+2)->iY, (aVx+2)->iZ );
-
+	glBegin(iWireFrame);
 	glColor4fv( &aCol[0].iR );
-	glNormal3f(aNv[0].iX, aNv[0].iY, aNv[0].iZ);
+//	glNormal3f(aNv[0].iX, aNv[0].iY, aNv[0].iZ);
 	glVertex3f(aVx[0].iX, aVx[0].iY, aVx[0].iZ);
 
-	//	printf("v1 [%f, %f, %f]\n", aVx[0].iX, aVx[0].iY, aVx[0].iZ );
-
 	glColor4fv( &aCol[1].iR );
-	glNormal3f(aNv[1].iX, aNv[1].iY, aNv[1].iZ);
+//	glNormal3f(aNv[1].iX, aNv[1].iY, aNv[1].iZ);
 	glVertex3f(aVx[1].iX, aVx[1].iY, aVx[1].iZ);
 
-	//	printf("v2 [%f, %f, %f]\n", aVx[1].iX, aVx[1].iY, aVx[1].iZ );
-
 	glColor4fv( &aCol[2].iR );
-	glNormal3f(aNv[2].iX, aNv[2].iY, aNv[2].iZ);
+//	glNormal3f(aNv[2].iX, aNv[2].iY, aNv[2].iZ);
 	glVertex3f(aVx[2].iX, aVx[2].iY, aVx[2].iZ);
-
-	//	printf("v3 [%f, %f, %f]\n\n", aVx[2].iX, aVx[2].iY, aVx[2].iZ );
-
 	glEnd();
-
-	//glEnable( GL_TEXTURE_2D );
 	}
 
 //Resize the window for GLUT

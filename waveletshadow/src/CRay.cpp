@@ -71,10 +71,6 @@ void CRay::Set(TVector3 aStart, TVector3 aDirection)
 
 bool CRay::IntersectTriangle2( TVector3* aTriangle[3], TVector3* aPlaneNormal ) 
 	{
-//	TVector3 edge1 = aTriangle[0]->vertex2Vector( *aTriangle[1] );
-//	TVector3 edge2 = aTriangle[1]->vertex2Vector( *aTriangle[2] );
-//	TVector3 planeNormal = edge1.cross(edge2);
-
 	//Check the ray and plane are not parallel
 	float dot=iDirection.dot( *aPlaneNormal );
 
@@ -115,8 +111,6 @@ bool CRay::IntersectTriangle2( TVector3* aTriangle[3], TVector3* aPlaneNormal )
 	if(angle >= KIntersectionAngle )
 		{
 		//Return the intersection parameter if requested
-//		if(intersectionT)
-//			*intersectionT=t;
 		return true;
 		}
 
