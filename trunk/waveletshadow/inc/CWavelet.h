@@ -2,21 +2,30 @@
 
 #include "basic.h"
 #include "THashtable.h"
+#include "CMatrix.h"
+#include "CMatrixNoColors.h"
 
 class CWavelet
 	{
 	public:
-		CWavelet(void);
-		~CWavelet(void);
+		CWavelet();
+		CWavelet( CMatrixNoColors* aMatrix ,int aRows, int aCols);
+		CWavelet( CMatrix* aMatrix ,int aRows, int aCols);
 
-		float * Decompose(float* aMatrix, int aRows, int aCols);
-		float * Reconstruct(float* aWavelet, int aRows, int aCols);
+		~CWavelet();
 
-	private:
-		float* DecomposeStep();
-		float* ReconstructStep();
-		float* transpose(float* aMatrix);
+		void Decompose();
+		void Reconstruct();
+		void print();
+		
 
+	
+		CMatrix* DecompositionStep(CMatrix *aMatrix);
+		CMatrix* ReconstructionStep(CMatrix *aMatrix);
+		CMatrixNoColors* DecompositionStep(CMatrixNoColors *aMatrix);
+		CMatrixNoColors* ReconstructionStep(CMatrixNoColors *aMatrix);
+
+	private:	
 		float ComputeParentSum( CWavelet aF, TSquare aS);
 		void ComputeChildrenSums( CWavelet aG, CWavelet aH );
 
@@ -26,12 +35,17 @@ class CWavelet
 		int sign( int aM, int aX, int aY );
 
 	private:
-		float *iMatrix;
-		float *iWavelet;
+		CMatrix *iWavelet;
+		CMatrixNoColors *iWaveletNoColors;
+		
 		int iRows;
 		int iCols;
 
 		THashTable iParentSum;
 		THashTable iChildSum;
+	public:
+		bool withColors;
+		bool decomposed;
+		bool recomposed;
 	};
 
