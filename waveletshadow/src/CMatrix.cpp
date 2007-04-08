@@ -2,11 +2,17 @@
 #include <vector>
 #include "CMatrix.h"
 
+CMatrix::CMatrix()
+{
+	iRows=0;
+	iCols=0;
+}
+
 CMatrix::CMatrix(int aRows, int aCols)
 {
 
-	std::vector<float> r;
-	r.resize(aCols,0.0);
+	std::vector<TVector3> r;
+	r.resize(aCols);
 	for(int rows=0; rows<aRows; rows++)
 	{
 		iMatrix.push_back(r);
@@ -14,31 +20,67 @@ CMatrix::CMatrix(int aRows, int aCols)
 	iRows=aRows;
 	iCols=aCols;
 }
-
-CMatrix::CMatrix(float* aMatrix, int aRows, int aCols)
+CMatrix::CMatrix(TVector3* aMatrix, int aRows, int aCols)
 {
-	std::vector<float> r;
-	r.resize(aCols,0.0);
+	iRows=aRows;
+	iCols=aCols;
+
+	//create empty Matrix
+	std::vector<TVector3> r;
+	r.resize(aCols);
 	for(int rows=0; rows<aRows; rows++)
 	{
 		iMatrix.push_back(r);
 	}
+
+
 	for(int rows=0; rows<aRows; rows++)
 	{
 		for(int cols=0; cols<aCols; cols++)
 		{
-			float a = *(aMatrix + rows*aCols + cols);
-			(iMatrix.at(rows).at(cols)) = a;
+			iMatrix.at(rows).at(cols)=*(aMatrix + rows*cols+ cols);
 		}
 	}
-	iRows=aRows;
-	iCols=aCols;
+
 }
+
+//CMatrix::CMatrix(float* aMatrix, int aRows, int aCols)
+//{
+//	
+//	std::vector<TVector3> r;
+//	r.resize(aCols);
+//	for(int rows=0; rows<aRows; rows++)
+//	{
+//		iMatrix.push_back(r);
+//	}
+//	for(int rows=0; rows<aRows; rows++)
+//	{
+//		for(int cols=0; cols<aCols; cols++)
+//		{
+//			float x=0;
+//			float y=0;
+//			float z=0;
+//
+//			for(int color=0;color<3;color++)
+//			{
+//				x=*(aMatrix+ rows*cols*3+cols*3+1);
+//				y=*(aMatrix+ rows*cols*3+cols*3+2);
+//				z=*(aMatrix+ rows*cols*3+cols*3+3);
+//			}
+//
+//			TVector3 a(x,y,z);
+//			(iMatrix.at(rows).at(cols)) = a;
+//		}
+//	}
+//	iRows=aRows;
+//	iCols=aCols;
+//}
 
 CMatrix::~CMatrix()
 {
 	for(int rows=0;rows<iRows;rows++)
 		iMatrix.at(rows).clear();
+	iMatrix.clear();
 }
 
 //CMatrix* CMatrix::operator=(float *aMatrix, int aRows, int aCols)
@@ -89,13 +131,26 @@ void CMatrix::substitute(CMatrix *aMatrix, int aRow1, int aRow2, int aCol1, int 
 	}
 }
 
-void CMatrix::print()
+void CMatrix::operator /(float a)
 {
+	a=a*1.0;
 	for(int rows=0;rows<iRows; rows++)
 	{
 		for(int cols=0; cols<iCols; cols++)
 		{
-			printf("%f\t",iMatrix.at(rows).at(cols));
+			iMatrix.at(rows).at(cols)/=a;
+		}
+	}
+}
+
+void CMatrix::print()
+{
+	std::cout<<"\n not implemented yet";
+	for(int rows=0;rows<iRows; rows++)
+	{
+		for(int cols=0; cols<iCols; cols++)
+		{
+			//std::cout<<iMatrix.at(rows).at(cols);
 		}
 		printf("\n");
 	}

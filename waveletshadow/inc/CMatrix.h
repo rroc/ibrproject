@@ -1,23 +1,29 @@
 #pragma once
 #include<vector>
+#include "TVector3.h"
 class CMatrix
 {
 	public:
+		CMatrix();
 		CMatrix(int aRows, int aCols);
-		CMatrix(float* aMatrix, int aRows, int aCols);
+		//CMatrix(float* aMatrix, int aRows, int aCols);
+		CMatrix(TVector3 *aMatrix, int aRows, int aCols);
+		
 		~CMatrix();
 
 		CMatrix * transpose();
 		void print();
 		//CMatrix* operator=(float *aMatrix, int aRows, int aCols);
+		void operator /(float a);
+		
 
 
 		CMatrix* crop(int aRow1,int aRow2,int aCol1, int aCol2 );
 		void substitute(CMatrix *aMatrix, int aRow1, int aRow2, int aCol1, int aCol2);
 
-	private:
+
 		int iRows;
 		int iCols;
-    private:
-		std::vector< std::vector<float> > iMatrix;
+   
+		std::vector< std::vector<TVector3> > iMatrix;
 };
