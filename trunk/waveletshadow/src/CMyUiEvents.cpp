@@ -39,7 +39,7 @@ void CMyUiEvents::ProcessNormalKeys(unsigned char key, int x, int y)
 			break;
 		//ENTER
 		case 13:
-			iRenderer->iCubeMapVertex++;
+			iRenderer->ChangeVertexMap();
 			break;
 		case 'w':
 		case 'W':

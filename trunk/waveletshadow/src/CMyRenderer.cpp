@@ -107,23 +107,7 @@ void CMyRenderer::InitMain()
 
 	PrecomputedRadianceTransfer();
 
-	int offSet = KSamplingResolution*KSamplingResolution;
-
-//	int vertex = 0;
-	iVertexMapTextures[0] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0)		), KSamplingResolution, KSamplingResolution );
-	iVertexMapTextures[1] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )), KSamplingResolution, KSamplingResolution );
-	iVertexMapTextures[2] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2)), KSamplingResolution, KSamplingResolution );
-	iVertexMapTextures[3] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3)), KSamplingResolution, KSamplingResolution );
-	iVertexMapTextures[4] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4)), KSamplingResolution, KSamplingResolution );
-	iVertexMapTextures[5] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5)), KSamplingResolution, KSamplingResolution );
-
-	iTextures.push_back( iVertexMapTextures[0] );
-	iTextures.push_back( iVertexMapTextures[1] );
-	iTextures.push_back( iVertexMapTextures[2] );
-	iTextures.push_back( iVertexMapTextures[3] );
-	iTextures.push_back( iVertexMapTextures[4] );
-	iTextures.push_back( iVertexMapTextures[5] );
-
+	InitVertexMap();
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
@@ -329,6 +313,55 @@ void CMyRenderer::UpdateScene()
 	}
 
 
+void CMyRenderer::InitVertexMap()
+	{
+	const int offSet = KSamplingResolution*KSamplingResolution;
+
+	//	int vertex = 0;
+	iVertexMapTextures[0] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0)		), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[1] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[2] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2)), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[3] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3)), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[4] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4)), KSamplingResolution, KSamplingResolution );
+	iVertexMapTextures[5] = CreateTexture( reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5)), KSamplingResolution, KSamplingResolution );
+
+	iTextures.push_back( iVertexMapTextures[0] );
+	iTextures.push_back( iVertexMapTextures[1] );
+	iTextures.push_back( iVertexMapTextures[2] );
+	iTextures.push_back( iVertexMapTextures[3] );
+	iTextures.push_back( iVertexMapTextures[4] );
+	iTextures.push_back( iVertexMapTextures[5] );
+	}
+
+
+void CMyRenderer::ChangeVertexMap()
+	{
+	const int offSet = KSamplingResolution*KSamplingResolution;
+
+	if(++iCubeMapVertex >= iSceneGraph.at(0)->iVisibilityCoefficients.size())
+		{
+		iCubeMapVertex = 0;
+		}
+
+	//roof
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
+	//left
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
+	//front
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
+	//right
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
+	//floor
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
+	//back
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
+	}
 
 
 // *************	RENDERING METHODS *********** /
@@ -881,11 +914,6 @@ void CMyRenderer::DrawMap()
 	{
 	glDisable(GL_LIGHTING);
 
-	if(iCubeMapVertex > iSceneGraph.at(0)->iVisibilityCoefficients.size())
-		{
-		iCubeMapVertex = 0;
-		}
-
 	glColor3f( 1.0f,1.0f,0.0);
 	glTranslatef( iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iX, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iY, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iZ );
 	glutSolidSphere(0.05f, 16,16);
@@ -915,11 +943,8 @@ void CMyRenderer::DrawMap()
 
 	glEnable( GL_TEXTURE_2D );
 
-	int offSet = KSamplingResolution*KSamplingResolution;
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
-	
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
 	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
@@ -929,7 +954,6 @@ void CMyRenderer::DrawMap()
 
 	//left
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
@@ -939,7 +963,6 @@ void CMyRenderer::DrawMap()
 
 	//front
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
@@ -949,7 +972,6 @@ void CMyRenderer::DrawMap()
 
 	//right
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
@@ -959,7 +981,6 @@ void CMyRenderer::DrawMap()
 
 	//floor
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
@@ -969,7 +990,6 @@ void CMyRenderer::DrawMap()
 
 	//back
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
@@ -989,6 +1009,118 @@ void CMyRenderer::DrawMap()
 	glPopMatrix();
 	}
 
+
+//void CMyRenderer::DrawMap()
+//	{
+//	glDisable(GL_LIGHTING);
+//
+//	if(iCubeMapVertex > iSceneGraph.at(0)->iVisibilityCoefficients.size())
+//		{
+//		iCubeMapVertex = 0;
+//		}
+//
+//	glColor3f( 1.0f,1.0f,0.0);
+//	glTranslatef( iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iX, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iY, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iZ );
+//	glutSolidSphere(0.05f, 16,16);
+//
+//
+//	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
+//	//glDisable(GL_DEPTH_TEST);
+//
+//	glMatrixMode(GL_PROJECTION);
+//	glPushMatrix();
+//	glLoadIdentity();
+//
+//	gluOrtho2D( 0, iScreenWidth, 0, iScreenHeight );
+//
+//	glMatrixMode(GL_MODELVIEW);
+//	glPushMatrix();
+//	glLoadIdentity();
+//
+//	//	glTranslatef(0.375f, 1.5f, 0.0f);
+//
+//	glColor3f(1.0, 1.0, 1.0 );
+//
+//	const int size = 64;
+//	const int size2 = size*2;
+//	const int translateY = iScreenHeight - (20 + size );
+//	const int translateX = iScreenWidth-(size2+20);
+//
+//	glEnable( GL_TEXTURE_2D );
+//
+//	int offSet = KSamplingResolution*KSamplingResolution;
+//	//roof
+//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
+//
+//	glBegin(GL_QUADS);
+//	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
+//	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
+//	glTexCoord2f(1.0f,1.0f); glVertex2i( size+translateX,	size+translateY );
+//	glTexCoord2f(0,1.0f);	 glVertex2i( translateX,		size+translateY );
+//	glEnd();
+//
+//	//left
+//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
+//	glBegin(GL_QUADS);
+//	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
+//	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
+//	glTexCoord2f(1.0f,1.0f);glVertex2i( translateX,			translateY);
+//	glTexCoord2f(0,1.0f);	glVertex2i(-size+translateX,	translateY);
+//	glEnd();
+//
+//	//front
+//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
+//	glBegin(GL_QUADS);
+//	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
+//	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
+//	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	translateY);
+//	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		translateY);
+//	glEnd();
+//
+//	//right
+//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
+//	glBegin(GL_QUADS);
+//	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
+//	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
+//	glTexCoord2f(1.0f,1.0f);glVertex2i(size2 + translateX,	translateY);
+//	glTexCoord2f(0,1.0f);	glVertex2i(size+translateX,		translateY);
+//	glEnd();
+//
+//	//floor
+//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
+//	glBegin(GL_QUADS);
+//	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
+//	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
+//	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	-size+translateY);
+//	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		-size+translateY);
+//	glEnd();
+//
+//	//back
+//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
+//	glBegin(GL_QUADS);
+//	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
+//	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
+//	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	-size2 + translateY);
+//	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		-size2 + translateY);
+//	glEnd();
+//
+//	glDisable( GL_TEXTURE_2D );
+//
+//	glDepthFunc(GL_LESS);	// normal depth buffering
+//	//glEnable(GL_DEPTH_TEST);
+//
+//	glMatrixMode(GL_PROJECTION);
+//	glPopMatrix();
+//
+//	glMatrixMode(GL_MODELVIEW);
+//	glPopMatrix();
+//	}
 
 
 

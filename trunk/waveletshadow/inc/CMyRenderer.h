@@ -47,7 +47,6 @@ class CMyRenderer
 		*/
 		~CMyRenderer();
 
-		void UpdateScene();
 
 		//MEMBER FUNCTIONS
 		///Renders a scene. This function is called from OpenGL, and renders a scene.
@@ -58,6 +57,12 @@ class CMyRenderer
 
 		///Rotate lightcoefficients
 		void RotateLights( float aChangeTheta, float aChangePhi );
+
+		void UpdateScene();
+
+		void ChangeVertexMap();
+
+
 
 		//GETTERS
 		//---------------------------------------
@@ -76,12 +81,14 @@ class CMyRenderer
 			{ return iScreenHeight; };
 
 
+
 	//PRIVATE FUNCTIONS
 	//------------------
 	private:
 		//Constructors will call this one
 		void InitMain();
 		void InitLights();
+		void InitVertexMap();
 
 		//Constructors will call this one
 		void CreateScene();
@@ -91,6 +98,8 @@ class CMyRenderer
 		void RenderObject(CMesh* aMesh);
 		void DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3]);
 		void DrawCubemap();
+
+		//per Vertex cubemap
 		void DrawMap();
 
 		void DrawLightSphere();
@@ -121,7 +130,6 @@ class CMyRenderer
 		CSceneRotation* iSceneRotation;
 		TVector3 iRotationAnimation;
 
-		int iCubeMapVertex;
 		GLenum iWireFrame;
 
 	//PRIVATE DATA
@@ -140,6 +148,8 @@ class CMyRenderer
 
 		int iObjectsInScene;
 		int iVerticesInScene;
+
+		int iCubeMapVertex;
 
 		int	iObjectCount;
 
