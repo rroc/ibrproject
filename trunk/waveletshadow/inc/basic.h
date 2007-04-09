@@ -39,3 +39,4 @@ class TSquare
 #define KDegreeToRadian M_PI/180.0
 
 #define USE_OPENMP
+#define USE_FP_TEXTURES

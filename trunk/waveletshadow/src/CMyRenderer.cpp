@@ -345,6 +345,48 @@ void CMyRenderer::ChangeVertexMap()
 		iCubeMapVertex = 0;
 		}
 
+#ifndef USE_FP_TEXTURES
+	GLubyte* checkImage = new GLubyte[ KSamplingResolution*KSamplingResolution*4*6 ];
+	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+	for (int i=0,endI=KSamplingResolution*KSamplingResolution*6;i<endI;i++)
+		{
+		int val = 0xFF * *(data+i);
+		*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+		*(checkImage+i*4+1) = (GLubyte)val; //green
+		*(checkImage+i*4+2) = (GLubyte)val; //blue
+		*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+		}
+	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	//roof
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+	//left
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4 );
+	//front
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*2 );
+
+	//right
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*3 );
+
+	//floor
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*4 );
+
+	//back
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*5 );
+
+	delete[] checkImage;
+#else
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
@@ -363,6 +405,7 @@ void CMyRenderer::ChangeVertexMap()
 	//back
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
+#endif
 	}
 
 
