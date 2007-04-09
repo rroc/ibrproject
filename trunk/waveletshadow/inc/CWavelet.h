@@ -34,10 +34,11 @@ class CWavelet
 		float F(int aM, int aL, int aX, int aY );
 		int sign( int aM, int aX, int aY );
 
-	private:
+
+	public:
 		CMatrix *iWavelet;
 		CMatrixNoColors *iWaveletNoColors;
-		
+	private:		
 		int iRows;
 		int iCols;
 

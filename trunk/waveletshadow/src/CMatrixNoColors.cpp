@@ -166,7 +166,7 @@ void CMatrixNoColors::operator *(float a)
 }
 void CMatrixNoColors::print()
 {
-	printf("\n Matrix without colors");
+	printf("\n Matrix without colors\n");
 	for(int rows=0;rows<iRows; rows++)
 	{
 		for(int cols=0; cols<iCols; cols++)
