@@ -70,7 +70,7 @@ CMatrixNoColors* CWavelet::nonStandardDeconstructionStep(CMatrixNoColors *aMatri
 	int limit=aMatrix->iCols/2;
 	//printf("\nlimit=%d, iCols=%d",limit,aMatrix->iCols);
 
-	printf("\n decomposing the cropped.....\n result is \n");
+	//printf("\n decomposing the cropped.....\n result is \n");
 	for(int i=0; i<limit;i++)
 	{
 		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
@@ -80,8 +80,8 @@ CMatrixNoColors* CWavelet::nonStandardDeconstructionStep(CMatrixNoColors *aMatri
 
 
 	
-	temp->print();
-	printf("\n.............decomposed!");
+	/*temp->print();
+	printf("\n.............decomposed!");*/
 	return temp;
 }
 CMatrixNoColors* CWavelet::nonStandardReconstructionStep(CMatrixNoColors *aMatrix)
