@@ -27,9 +27,11 @@
 * gcc -Wall -ansi -L/usr/X11R6/lib -lGL -lGLU -lglut tga.c -o tga
 */
 
-#include "tga.h"
+#include "Texture.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
+
 
 #ifdef __WIN32
 #include <GL/glut.h>
@@ -717,6 +719,66 @@ GLuint CreateTexture(TVector3* data, int width, int height )
 
 	free (texInfo);
 	return(texId);
+	}
+
+
+GLuint LoadPFMTexture( string filename )
+	{
+	std::ifstream infile( filename.c_str(), std::ios::in | std::ios::binary);
+	if(!infile.is_open())
+		{
+		printf("File access error while loading: %s\n", filename.c_str());
+		exit(-1);
+		}
+
+	//read the header
+	char id;
+	char type;
+	int channels(1);
+	int width(0);
+	int height(0);
+
+	infile.read((char *)&id,	sizeof(char));
+	infile.read((char *)&type,	sizeof(char));
+	if (type == 'F')
+		{
+		channels=3;
+		}	
+	infile >> width;
+	infile >> height;
+	printf("ID:%c, Type:%c, Size: %dx%d\n", id, type, width, height );
+
+	float byteOrder(0);
+	infile >> byteOrder;
+	infile.ignore(1);//ignore the newline
+
+	if (byteOrder<0)
+		{
+		//little-endian
+		printf("Little endian (%f)\n", byteOrder);
+		}
+	else
+		{
+		//big-endian
+		printf("Big endian (%f)\n", byteOrder);
+		}
+
+	//read the data
+	int size = width*height*channels;
+	float* data = new float[size];	
+	infile.read((char*) data, sizeof(float)*size);	
+
+	infile.close();
+
+	vector<TVector3> imageData;
+	for(int i=0;i<size; i+=3)
+		{
+		TVector3 vec( *(data), *(data+1), *(data+2) );
+		imageData.push_back( vec );
+		printf("[%f, %f, %f]\n", vec.iX, vec.iY, vec.iZ);
+		}
+	delete[] data;
+	imageData.clear();
 	}
 
 

@@ -1,7 +1,7 @@
 //INCLUDES
 #include <fstream>
 #include "CMyRenderer.h"
-#include "tga.h"
+#include "Texture.h"
 #include "CMeshLoader.h"
 #include "CObjLoader.h"
 #include <ctime>
@@ -109,10 +109,12 @@ void CMyRenderer::InitMain()
 
 	InitVertexMap();
 
+	//LoadPFMTexture("room_toy_mirror.pfm");
+
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
 	//iLightVector *= KLightVectorSize; // for drawing the vector!
-	}
+ 	}
 
 int CMyRenderer::InitializeSamplingData()
 	{

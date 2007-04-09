@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="waveletshadow"
 	ProjectGUID="{0C02C7B8-08B3-4A59-9224-2DB5AC8C99B4}"
 	>
@@ -213,7 +213,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\tga.cpp"
+				RelativePath=".\src\Texture.cpp"
 				>
 			</File>
 		</Filter>
@@ -299,7 +299,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\inc\tga.h"
+				RelativePath=".\inc\Texture.h"
 				>
 			</File>
 			<File
