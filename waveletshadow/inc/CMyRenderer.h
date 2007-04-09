@@ -101,6 +101,7 @@ class CMyRenderer
 
 		//per Vertex cubemap
 		void DrawMap();
+		void DrawProbe();
 
 		void DrawLightSphere();
 
@@ -140,6 +141,7 @@ class CMyRenderer
 
 		vector<int> iTextures;
 		int iVertexMapTextures[6];
+		int iProbeMapTextures[6];
 
 		CSceneNode* iScene;
 		vector<CMesh*> iMeshList;

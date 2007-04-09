@@ -680,33 +680,33 @@ GLuint CreateTexture(float* data, int width, int height )
 
 GLuint CreateTexture(TVector3* data, int width, int height )
 	{
-	gl_texture_t* texInfo = (gl_texture_t *)malloc (sizeof (gl_texture_t));
-	texInfo->width  = width;
-	texInfo->height = height;
+	GLuint texId; 
+	glGenTextures(1, &texId);
+	glBindTexture(GL_TEXTURE_2D, texId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	texInfo->format = GL_RGBA;
-	texInfo->internalFormat = 4;
+#ifndef USE_FP_TEXTURES
+	GLubyte* checkImage = new GLubyte[ width*height*4 ];
 
-	glGenTextures (1, &texInfo->id);
-	glBindTexture (GL_TEXTURE_2D, texInfo->id);
+	for (int i=0,endI=width*height;i<endI;i++)
+		{
+//		int val = 0xFF * *(data+i);
+		*(checkImage+i*4)   = (GLubyte)0xFF * (data+i)->iX; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+		*(checkImage+i*4+1) = (GLubyte)0xFF * (data+i)->iY; //green
+		*(checkImage+i*4+2) = (GLubyte)0xFF * (data+i)->iZ; //blue
+		*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+		}
+	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);/*GL_CLAMP, GL_REPEAT*/
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-	glTexImage2D( GL_TEXTURE_2D
-		, 0
-		, texInfo->internalFormat
-		, texInfo->width
-		, texInfo->height
-		, 0
-		, texInfo->format
-		, GL_UNSIGNED_BYTE
-		, data
-		);
-
-	int texId = texInfo->id;
-
-	free (texInfo);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+	delete[] checkImage;
+#else
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 1, GL_RGB, GL_FLOAT, data );
+#endif
+	printf("Created a luminance texture: %d\n",texId);
 	return(texId);
 	}
 
@@ -750,6 +750,8 @@ GLuint LoadPFMTexture( string filename )
 		{
 		//big-endian
 		printf("Big endian (%f)\n", byteOrder);
+		printf("Big endian not supported atm.\n");
+		exit(-1);
 		}
 
 	//read the data
@@ -769,6 +771,139 @@ GLuint LoadPFMTexture( string filename )
 	delete[] data;
 	imageData.clear();
 	}
+
+GLuint LoadPFMCubeMap( string filename )
+	{
+	FILE *infile = fopen(filename.c_str(), "rb");
+
+	int fileType = fgetc(infile);
+	int formatRGB = fgetc(infile);
+	int junk = fgetc(infile); //newline
+
+	if ((fileType != 'P') || ((formatRGB != 'F') && (formatRGB != 'f')))
+		{
+		fclose(infile);
+		printf("Not a valid pfm file: %s\n", filename.c_str());
+		exit(-1);
+		}
+
+	formatRGB = (formatRGB == 'F');		// 'F' = RGB,  'f' = monochrome
+	int width, height;
+	fscanf(infile, "%d %d%c", &width, &height, &junk);
+	if ((width <= 0) || (height <= 0))
+		{
+		fclose(infile);
+		printf("Size is 0 x 0\n");
+		exit(-1);
+		}
+
+	float scalefactor;
+	fscanf(infile, "%f%c", &scalefactor, &junk);
+
+	int widthFace = width/3;
+	int heightFace = height/4;
+
+	TVector3* data = new TVector3[width*height];
+
+	if (!data)
+		{
+		fclose(infile);
+		printf("Out of Memory. (too large PFM file?)\n");
+		exit(-1);
+		}
+	if (scalefactor > 0.0)
+		{
+		printf("No MSB support yet.\n");
+		exit(-1);
+		}
+
+	fileType = width * (formatRGB ? 3 : 1);
+	float *fbuf = new float[fileType];
+
+	printf("Face: %d x %d\n", widthFace, heightFace );
+
+	TVector3 *cur = reinterpret_cast<TVector3*>( data );
+	for(int j = 0; j < height; j++)
+		{
+		if (fread(fbuf, sizeof(float), fileType, infile) != (size_t) fileType)
+			{
+			fclose(infile);
+			delete fbuf;
+			return 0;
+			}
+		float *temp = fbuf;
+		for (int i = 0; i < width; i++)
+			{
+			if(
+				//BACK & FLOOR
+				(j<heightFace*2 && i>=widthFace && i<widthFace*2)
+				//LEFT,FRONT,RIGHT
+				|| (j>=heightFace*2 && j<heightFace*3) 
+				//ROOF
+				|| (j>=heightFace*3 && i>=widthFace && i<widthFace*2) 
+				)
+				{
+				if (formatRGB)
+					{
+					cur->iX = *temp++;
+					cur->iY = *temp++;
+					cur->iZ = *temp++;
+#ifdef _DEBUG
+					printf("(%d,%d): [%f, %f, %f]\n",i,j,cur->iX,cur->iY,cur->iZ);
+#endif
+					}
+				else			// black and white
+					{
+					float c;
+					c = *temp++;
+					cur->iX = cur->iY = cur->iZ = c;
+					}
+				cur++;
+				}
+			else
+				{
+				if (formatRGB)			// color
+					{
+					temp+=3;
+					}
+				else
+					{
+					temp++;
+					}
+				}
+			}
+		}
+	delete fbuf;
+	fclose(infile);
+
+	//FLIP VERTICAL
+	int top = height - 1;
+	int bottom = 0;
+	TVector3 temp;
+	while (top > bottom)
+		{
+		//Swap line
+		for (int i = 0; i < width; i++)
+			{	
+			temp = *(data+(formatRGB*width+i));
+			*(data+(bottom*width+i)) = *(data+(top*width+i));
+			*(data+(top*width+i)) = temp;
+			}
+		top--;
+		bottom++;
+		}
+
+	int pfmTextures[6];
+	pfmTextures[0] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+	pfmTextures[1] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+	pfmTextures[2] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+	pfmTextures[3] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+	pfmTextures[4] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+	pfmTextures[5] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+
+	return pfmTextures[0];
+	}
+
 
 
 GLuint LoadCubeMapTextures(
