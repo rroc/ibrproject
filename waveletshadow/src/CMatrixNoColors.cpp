@@ -99,7 +99,7 @@ CMatrixNoColors* CMatrixNoColors::crop(int aRow1,int aRow2,int aCol1, int aCol2 
 	CMatrixNoColors *cropped=new CMatrixNoColors(newR, newC);
 	//printf("\naR1=%d, aR2=%d, aC1=%d, aC2=%d, R=%d, C=%d",aRow1,aRow2,aCol1,aCol2,newR,newC);
 	//cropped->print();
-	printf("\ncropping.....");
+	//printf("\ncropping.....");
 
 	/*printf("\noriginal matrix\n");
 	this->print();*/
@@ -113,16 +113,11 @@ CMatrixNoColors* CMatrixNoColors::crop(int aRow1,int aRow2,int aCol1, int aCol2 
 		}
 	}
 
-	//for(int rows=0, rows1=aRow1; rows<newR|| rows1<aRow2; rows++,rows1++)
-	//	for(int cols=0, cols1=aCol1; cols<newC || cols1<aCol2; cols++,cols1++)
-	//	{
-	//		printf("\n rows=%d, cols=%d, rows1= %d, cols1= %d",rows,cols,rows1,cols1);
-	//		cropped->iMatrix.at(rows).at(cols)=iMatrix.at(rows1).at(cols1);
-	//	}
-	printf("\n cropped Matrix is :");
-	printf("\naR1=%d, aR2=%d, aC1=%d, aC2=%d, R=%d, C=%d\n",aRow1,aRow2,aCol1,aCol2,newR,newC);
-	cropped->print();
-		printf("\n............cropped!");
+	
+	//printf("\n cropped Matrix is :");
+	//printf("\naR1=%d, aR2=%d, aC1=%d, aC2=%d, R=%d, C=%d\n",aRow1,aRow2,aCol1,aCol2,newR,newC);
+	//cropped->print();
+	//	printf("\n............cropped!");
 	return cropped;
 }
 
