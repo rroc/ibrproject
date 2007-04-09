@@ -139,21 +139,31 @@ void CMatrixNoColors::substitute(CMatrixNoColors *aMatrix, int aRow1, int aRow2,
 void CMatrixNoColors::operator /(float a)
 {
 	a=a*1.0;
-	printf("\n ....division");
+//	printf("\n ....division");
 
 	for(int rows=0;rows<iRows; rows++)
 	{
 		printf("\n");
 		for(int cols=0; cols<iCols; cols++)
 		{
-			printf("(%f)", iMatrix.at(rows).at(cols));
+//			printf("(%f)", iMatrix.at(rows).at(cols));
 			iMatrix.at(rows).at(cols)/=a;
-			printf("%f    ", iMatrix.at(rows).at(cols));
+//			printf("%f    ", iMatrix.at(rows).at(cols));
 		}
 	}
-	printf("\ndivision finished");
+//	printf("\ndivision finished");
 }
+void CMatrixNoColors::operator *(float a)
+{
 
+	for(int rows=0;rows<iRows; rows++)
+	{
+		for(int cols=0; cols<iCols; cols++)
+		{
+			iMatrix.at(rows).at(cols)*=a;
+		}
+	}
+}
 void CMatrixNoColors::print()
 {
 	printf("\n Matrix without colors");

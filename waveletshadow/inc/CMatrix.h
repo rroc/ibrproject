@@ -15,6 +15,7 @@ class CMatrix
 		void print();
 		//CMatrix* operator=(float *aMatrix, int aRows, int aCols);
 		void operator /(float a);
+		void operator *(float a);
 		
 
 
