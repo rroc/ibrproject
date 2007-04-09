@@ -50,8 +50,18 @@ CMatrix* CWavelet::DecompositionStep(CMatrix *aMatrix)
 }
 CMatrix* CWavelet::ReconstructionStep(CMatrix *aMatrix)
 {
-	CMatrix* a = NULL;
-	return a;
+	CMatrix *temp= new CMatrix(aMatrix->iRows,aMatrix->iCols);
+
+	int limit=aMatrix->iCols/2;
+	for (int i=0;i<limit;i++)
+	{
+		temp->iMatrix.at(0).at(2*i)   = ( aMatrix->iMatrix.at(0).at(i) + aMatrix->iMatrix.at(0).at(limit+i) )/sqrt(2.0);
+		temp->iMatrix.at(0).at(2*i+1) = ( aMatrix->iMatrix.at(0).at(i) - aMatrix->iMatrix.at(0).at(limit+i) )/sqrt(2.0);
+	}
+
+
+	aMatrix->~CMatrix();
+	return temp;
 }
 
 CMatrixNoColors* CWavelet::DecompositionStep(CMatrixNoColors *aMatrix)
@@ -70,14 +80,24 @@ CMatrixNoColors* CWavelet::DecompositionStep(CMatrixNoColors *aMatrix)
 
 
 	
-	temp->print();
-	printf("\n.............decomposed!");
+	/*temp->print();
+	printf("\n.............decomposed!");*/
 	return temp;
 }
 CMatrixNoColors* CWavelet::ReconstructionStep(CMatrixNoColors *aMatrix)
 {
-	CMatrixNoColors* a = NULL;
-	return a;
+	CMatrixNoColors *temp= new CMatrixNoColors(aMatrix->iRows,aMatrix->iCols);
+
+	int limit=aMatrix->iCols/2;
+	for (int i=0;i<limit;i++)
+	{
+		temp->iMatrix.at(0).at(2*i)   = ( aMatrix->iMatrix.at(0).at(i) + aMatrix->iMatrix.at(0).at(limit+i) )/sqrt(2.0);
+		temp->iMatrix.at(0).at(2*i+1) = ( aMatrix->iMatrix.at(0).at(i) - aMatrix->iMatrix.at(0).at(limit+i) )/sqrt(2.0);
+	}
+
+
+	aMatrix->~CMatrixNoColors();
+	return temp;
 }
 
 void CWavelet::Decompose()
@@ -147,6 +167,9 @@ void CWavelet::Decompose()
 				//printf("\ng=%f,iCols=%d",g,iCols);
 		}
 	//}
+		printf("\n after decomposition....\n");
+		iWaveletNoColors->print();
+		printf("\n-------------------\n");
 	this->decomposed=true;
 	this->recomposed=false;
 }
@@ -162,18 +185,34 @@ void CWavelet::print()
 }
 
 void CWavelet::Reconstruct()
-{	
-	//float g=1;
-	//while(g<=aCols)
-	//	for(int col=0; col<g, col++)
-	//	{
-	//		temp= c(0:g,col,:);
-	//		for(int color=0; color<3;color++)
-	//		{
-	//			
-	//		}
-	//	}
+{
+	if(!withColors)
+	{
+	int g=2;
+	while(g<=iCols)
+	{
+		for(int col=0; col<g; col++)
+		{
+			CMatrixNoColors *cropped=iWaveletNoColors->crop(0,g,col,col+1);
+			CMatrixNoColors *transposed=cropped->transpose();
+			CMatrixNoColors *reconstructed=ReconstructionStep(transposed);
+			CMatrixNoColors *actual_reconstructed=reconstructed->transpose();
+			iWaveletNoColors->substitute(actual_reconstructed, 0, g,col,col+1);
+		}
+		for (int row=0;row<g;row++)
+		{
+			CMatrixNoColors *cropped=iWaveletNoColors->crop(row,row+1,0,g);
+			//CMatrixNoColors *transposed=cropped->transpose();
+			CMatrixNoColors *reconstructed=ReconstructionStep(cropped);
+			//CMatrixNoColors *actual_reconstructed=reconstructed->transpose();
+			iWaveletNoColors->substitute(reconstructed, row,row+1,0,g);
 
+
+		}
+		g*=2;
+	
+	}
+	}	
 	this->decomposed=false;
 	this->recomposed=true;
 
