@@ -64,8 +64,7 @@ int SwapFourBytes(int dw)
 	}
 #endif
 
-void
-GetTextureInfo (tga_header_t *header, gl_texture_t *texinfo)
+void GetTextureInfo (tga_header_t *header, gl_texture_t *texinfo)
 	{
 	texinfo->width = header->width;
 	texinfo->height = header->height;
@@ -112,8 +111,7 @@ GetTextureInfo (tga_header_t *header, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
+void ReadTexture8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 	{
 	int i;
 	GLubyte color;
@@ -131,8 +129,7 @@ ReadTexture8bits (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture16bits (FILE *fp, gl_texture_t *texinfo)
+void ReadTexture16bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 	unsigned short color;
@@ -150,8 +147,7 @@ ReadTexture16bits (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture24bits (FILE *fp, gl_texture_t *texinfo)
+void ReadTexture24bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -165,8 +161,7 @@ ReadTexture24bits (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture32bits (FILE *fp, gl_texture_t *texinfo)
+void ReadTexture32bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -188,8 +183,7 @@ ReadTexture32bits (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexturegray8bits (FILE *fp, gl_texture_t *texinfo)
+void ReadTexturegray8bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -201,8 +195,7 @@ ReadTexturegray8bits (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexturegray16bits (FILE *fp, gl_texture_t *texinfo)
+void ReadTexturegray16bits (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i;
 
@@ -215,8 +208,7 @@ ReadTexturegray16bits (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
+void ReadTexture8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte color;
@@ -257,8 +249,7 @@ ReadTexture8bitsRLE (FILE *fp, GLubyte *colormap, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture16bitsRLE (FILE *fp, gl_texture_t *texinfo)
+void ReadTexture16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	unsigned short color;
@@ -299,8 +290,7 @@ ReadTexture16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture24bitsRLE (FILE *fp, gl_texture_t *texinfo)
+void ReadTexture24bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte rgb[3];
@@ -339,8 +329,7 @@ ReadTexture24bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexture32bitsRLE (FILE *fp, gl_texture_t *texinfo)
+void ReadTexture32bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte rgba[4];
@@ -381,8 +370,7 @@ ReadTexture32bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexturegray8bitsRLE (FILE *fp, gl_texture_t *texinfo)
+void ReadTexturegray8bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte color;
@@ -413,8 +401,7 @@ ReadTexturegray8bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-void
-ReadTexturegray16bitsRLE (FILE *fp, gl_texture_t *texinfo)
+void ReadTexturegray16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	{
 	int i, size;
 	GLubyte color, alpha;
@@ -452,8 +439,7 @@ ReadTexturegray16bitsRLE (FILE *fp, gl_texture_t *texinfo)
 	}
 
 
-gl_texture_t *
-ReadTextureFile (const char *filename)
+gl_texture_t* ReadTextureFile (const char *filename)
 	{
 	FILE *fp;
 	gl_texture_t *texinfo;
@@ -662,17 +648,6 @@ void WriteTGATexture(const char* aFileName, int width, int height, char* data )
 
 GLuint CreateTexture(float* data, int width, int height )
 	{
-	//GLubyte* checkImage = new GLubyte[ width*height*4 ];
-
-	//for (int i=0,endI=width*height;i<endI;i++)
-	//	{
-	//	int val = 0xFF * *(data+i);
-	//	*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
-	//	*(checkImage+i*4+1) = (GLubyte)val; //green
-	//	*(checkImage+i*4+2) = (GLubyte)val; //blue
-	//	*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
-	//	}
-//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	GLuint texId; 
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
@@ -680,11 +655,25 @@ GLuint CreateTexture(float* data, int width, int height )
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+
+#ifndef USE_FP_TEXTURES
+	GLubyte* checkImage = new GLubyte[ width*height*4 ];
+
+	for (int i=0,endI=width*height;i<endI;i++)
+		{
+		int val = 0xFF * *(data+i);
+		*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+		*(checkImage+i*4+1) = (GLubyte)val; //green
+		*(checkImage+i*4+2) = (GLubyte)val; //blue
+		*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+		}
+	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+	delete[] checkImage;
+#else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 1, GL_LUMINANCE, GL_FLOAT, data );
-
-//	delete[] checkImage;
-
+#endif
 	printf("Created a luminance texture: %d\n",texId);
 	return(texId);
 	}
