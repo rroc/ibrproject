@@ -14,16 +14,28 @@ class CWavelet
 
 		~CWavelet();
 
-		void Decompose();
-		void Reconstruct();
+		void nonStandardDeconstruction();
+		void nonStandardReconstruction();
+		void standardDeconstruction();
+		void standardReconstruction();
 		void print();
 		
 
-	
-		CMatrix* DecompositionStep(CMatrix *aMatrix);
-		CMatrix* ReconstructionStep(CMatrix *aMatrix);
-		CMatrixNoColors* DecompositionStep(CMatrixNoColors *aMatrix);
-		CMatrixNoColors* ReconstructionStep(CMatrixNoColors *aMatrix);
+		//non-standard steps- with/without colors
+		CMatrix* nonStandardDeconstructionStep(CMatrix *aMatrix);
+		CMatrix* nonStandardReconstructionStep(CMatrix *aMatrix);
+		CMatrixNoColors* nonStandardDeconstructionStep(CMatrixNoColors *aMatrix);
+		CMatrixNoColors* nonStandardReconstructionStep(CMatrixNoColors *aMatrix);
+
+		//standard steps- with/without colors
+		/*CMatrix* standardDeconstructionStep(CMatrix *aMatrix);
+		CMatrix* standardReconstructionStep(CMatrix *aMatrix);
+		CMatrixNoColors* standardDeconstructionStep(CMatrixNoColors *aMatrix);
+		CMatrixNoColors* standardReconstructionStep(CMatrixNoColors *aMatrix);*/
+
+		
+
+		float* returnFloat();
 
 	private:	
 		float ComputeParentSum( CWavelet aF, TSquare aS);

@@ -21,6 +21,7 @@ class CMatrix
 
 		CMatrix* crop(int aRow1,int aRow2,int aCol1, int aCol2 );
 		void substitute(CMatrix *aMatrix, int aRow1, int aRow2, int aCol1, int aCol2);
+		float* returnFloat();
 
 
 		int iRows;

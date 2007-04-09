@@ -171,3 +171,10 @@ void CMatrix::print()
 	}
 
 }
+
+float* CMatrix::returnFloat()
+{
+	printf("\nfloat* CMatrix::returnFloat() is not yet implemented");
+	float *p=NULL;
+	return p;
+}

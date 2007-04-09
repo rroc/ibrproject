@@ -46,7 +46,8 @@ CMatrixNoColors::CMatrixNoColors(int aRows, int aCols)
 
 CMatrixNoColors::CMatrixNoColors(float* aMatrix, int aRows, int aCols)
 {
-	
+	iMatrix.clear();
+
 	std::vector<float> r;
 	r.resize(aCols,0.0);
 	for(int rows=0; rows<aRows; rows++)
@@ -99,10 +100,10 @@ CMatrixNoColors* CMatrixNoColors::crop(int aRow1,int aRow2,int aCol1, int aCol2 
 	CMatrixNoColors *cropped=new CMatrixNoColors(newR, newC);
 	//printf("\naR1=%d, aR2=%d, aC1=%d, aC2=%d, R=%d, C=%d",aRow1,aRow2,aCol1,aCol2,newR,newC);
 	//cropped->print();
-	//printf("\ncropping.....");
+	printf("\ncropping.....");
 
-	/*printf("\noriginal matrix\n");
-	this->print();*/
+	printf("\noriginal matrix\n");
+	this->print();
 
 	for (int i=0,endI=newR; i<endI; i++)
 	{
@@ -114,10 +115,10 @@ CMatrixNoColors* CMatrixNoColors::crop(int aRow1,int aRow2,int aCol1, int aCol2 
 	}
 
 	
-	//printf("\n cropped Matrix is :");
-	//printf("\naR1=%d, aR2=%d, aC1=%d, aC2=%d, R=%d, C=%d\n",aRow1,aRow2,aCol1,aCol2,newR,newC);
-	//cropped->print();
-	//	printf("\n............cropped!");
+	printf("\n cropped Matrix is :");
+	printf("\naR1=%d, aR2=%d, aC1=%d, aC2=%d, R=%d, C=%d\n",aRow1,aRow2,aCol1,aCol2,newR,newC);
+	cropped->print();
+		printf("\n............cropped!");
 	return cropped;
 }
 
@@ -153,7 +154,7 @@ void CMatrixNoColors::operator /(float a)
 	}
 //	printf("\ndivision finished");
 }
-void CMatrixNoColors::operator *(float a)
+void CMatrixNoColors::operator * (float a)
 {
 
 	for(int rows=0;rows<iRows; rows++)
@@ -176,4 +177,18 @@ void CMatrixNoColors::print()
 		printf("\n");
 	}
 
+}
+
+float* CMatrixNoColors::returnFloat()
+{
+	float *p=new float[iRows*iCols];
+	for (int rows=0;rows<iRows;rows++)
+	{
+		for (int cols=0; cols<iCols;cols++)
+		{
+			(*(p+rows*iCols+cols))=iMatrix.at(rows).at(cols);
+		}
+	}
+	
+	return p;
 }

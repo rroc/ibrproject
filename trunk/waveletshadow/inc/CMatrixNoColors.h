@@ -20,6 +20,8 @@ class CMatrixNoColors
 		CMatrixNoColors* crop(int aRow1,int aRow2,int aCol1, int aCol2 );
 		void substitute(CMatrixNoColors *aMatrix, int aRow1, int aRow2, int aCol1, int aCol2);
 
+		float* returnFloat();
+
 
 		int iRows;
 		int iCols;

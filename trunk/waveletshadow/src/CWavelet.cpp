@@ -34,7 +34,7 @@ CWavelet::~CWavelet(void)
 	recomposed       = false;
 
 }
-CMatrix* CWavelet::DecompositionStep(CMatrix *aMatrix)
+CMatrix* CWavelet::nonStandardDeconstructionStep(CMatrix *aMatrix)
 {
 	CMatrix *temp= new CMatrix(aMatrix->iRows,aMatrix->iCols);
 	int limit=aMatrix->iCols/2;
@@ -48,7 +48,7 @@ CMatrix* CWavelet::DecompositionStep(CMatrix *aMatrix)
 
 	return temp;
 }
-CMatrix* CWavelet::ReconstructionStep(CMatrix *aMatrix)
+CMatrix* CWavelet::nonStandardReconstructionStep(CMatrix *aMatrix)
 {
 	CMatrix *temp= new CMatrix(aMatrix->iRows,aMatrix->iCols);
 
@@ -64,13 +64,13 @@ CMatrix* CWavelet::ReconstructionStep(CMatrix *aMatrix)
 	return temp;
 }
 
-CMatrixNoColors* CWavelet::DecompositionStep(CMatrixNoColors *aMatrix)
+CMatrixNoColors* CWavelet::nonStandardDeconstructionStep(CMatrixNoColors *aMatrix)
 {
 	CMatrixNoColors *temp= new CMatrixNoColors(aMatrix->iRows,aMatrix->iCols);
 	int limit=aMatrix->iCols/2;
 	//printf("\nlimit=%d, iCols=%d",limit,aMatrix->iCols);
 
-	//printf("\n decomposing the cropped.....\n result is \n");
+	printf("\n decomposing the cropped.....\n result is \n");
 	for(int i=0; i<limit;i++)
 	{
 		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
@@ -80,11 +80,11 @@ CMatrixNoColors* CWavelet::DecompositionStep(CMatrixNoColors *aMatrix)
 
 
 	
-	/*temp->print();
-	printf("\n.............decomposed!");*/
+	temp->print();
+	printf("\n.............decomposed!");
 	return temp;
 }
-CMatrixNoColors* CWavelet::ReconstructionStep(CMatrixNoColors *aMatrix)
+CMatrixNoColors* CWavelet::nonStandardReconstructionStep(CMatrixNoColors *aMatrix)
 {
 	CMatrixNoColors *temp= new CMatrixNoColors(aMatrix->iRows,aMatrix->iCols);
 
@@ -100,7 +100,7 @@ CMatrixNoColors* CWavelet::ReconstructionStep(CMatrixNoColors *aMatrix)
 	return temp;
 }
 
-void CWavelet::Decompose()
+void CWavelet::nonStandardDeconstruction()
 {
 	if(withColors)
 	{
@@ -124,7 +124,7 @@ void CWavelet::Decompose()
 				printf("\ng=%f, iCols=%d", g, iCols);
 				printf("\nrow =%d, row+1 = %d, g-1=%d",row,row+1, (g));*/
 				CMatrix* cropped = iWavelet->crop(row,row+1,0, (g));
-				CMatrix* decomposed= DecompositionStep(cropped);
+				CMatrix* decomposed= nonStandardDeconstructionStep(cropped);
 				iWavelet->substitute(decomposed,row,row+1,0, (g));				
 			}
 
@@ -132,7 +132,7 @@ void CWavelet::Decompose()
 			{
 				CMatrix* cropped= iWavelet->crop(0, (g),cols,cols+1);
 				CMatrix *transposed= cropped->transpose();
-				CMatrix* decomposed= DecompositionStep(transposed);
+				CMatrix* decomposed= nonStandardDeconstructionStep(transposed);
 				CMatrix* actual_decomposed= decomposed->transpose();
 				iWavelet->substitute(actual_decomposed, 0, (g),cols,cols+1);
 			}
@@ -162,7 +162,7 @@ void CWavelet::Decompose()
 				printf("\ng=%f, iCols=%d", g, iCols);
 				printf("\nrow =%d, row+1 = %d, g-1=%d",row,row+1, (g));*/
 				CMatrixNoColors* cropped = iWaveletNoColors->crop(row,row+1,0, (g));
-				CMatrixNoColors* decomposed= DecompositionStep(cropped);
+				CMatrixNoColors* decomposed= nonStandardDeconstructionStep(cropped);
 				iWaveletNoColors->substitute(decomposed,row,row+1,0, (g));				
 			}
 
@@ -170,7 +170,7 @@ void CWavelet::Decompose()
 			{
 				CMatrixNoColors* cropped= iWaveletNoColors->crop(0, (g),cols,cols+1);
 				CMatrixNoColors *transposed= cropped->transpose();
-				CMatrixNoColors* decomposed= DecompositionStep(transposed);
+				CMatrixNoColors* decomposed= nonStandardDeconstructionStep(transposed);
 				CMatrixNoColors* actual_decomposed= decomposed->transpose();
 				iWaveletNoColors->substitute(actual_decomposed, 0, (g),cols,cols+1);
 			}
@@ -178,10 +178,10 @@ void CWavelet::Decompose()
 				//printf("\ng=%f,iCols=%d",g,iCols);
 		}
 	}
-	/*	printf("\n after decomposition....\n");
-		iWaveletNoColors->print();
-		printf("\n-------------------\n");
-	*/
+		//printf("\n after decomposition....\n");
+		//iWaveletNoColors->print();
+		//printf("\n-------------------\n");
+	
 	this->decomposed=true;
 	this->recomposed=false;
 }
@@ -196,7 +196,7 @@ void CWavelet::print()
 
 }
 
-void CWavelet::Reconstruct()
+void CWavelet::nonStandardReconstruction()
 {
 	if(withColors)
 	{
@@ -207,7 +207,7 @@ void CWavelet::Reconstruct()
 			{
 				CMatrix *cropped=iWavelet->crop(0,g,col,col+1);
 				CMatrix *transposed=cropped->transpose();
-				CMatrix *reconstructed=ReconstructionStep(transposed);
+				CMatrix *reconstructed=nonStandardReconstructionStep(transposed);
 				CMatrix *actual_reconstructed=reconstructed->transpose();
 				iWavelet->substitute(actual_reconstructed, 0, g,col,col+1);
 			}
@@ -215,7 +215,7 @@ void CWavelet::Reconstruct()
 			{
 				CMatrix *cropped=iWavelet->crop(row,row+1,0,g);
 				//CMatrix *transposed=cropped->transpose();
-				CMatrix *reconstructed=ReconstructionStep(cropped);
+				CMatrix *reconstructed=nonStandardReconstructionStep(cropped);
 				//CMatrix *actual_reconstructed=reconstructed->transpose();
 				iWavelet->substitute(reconstructed, row,row+1,0,g);
 
@@ -236,7 +236,7 @@ void CWavelet::Reconstruct()
 		{
 			CMatrixNoColors *cropped=iWaveletNoColors->crop(0,g,col,col+1);
 			CMatrixNoColors *transposed=cropped->transpose();
-			CMatrixNoColors *reconstructed=ReconstructionStep(transposed);
+			CMatrixNoColors *reconstructed=nonStandardReconstructionStep(transposed);
 			CMatrixNoColors *actual_reconstructed=reconstructed->transpose();
 			iWaveletNoColors->substitute(actual_reconstructed, 0, g,col,col+1);
 		}
@@ -244,7 +244,7 @@ void CWavelet::Reconstruct()
 		{
 			CMatrixNoColors *cropped=iWaveletNoColors->crop(row,row+1,0,g);
 			//CMatrixNoColors *transposed=cropped->transpose();
-			CMatrixNoColors *reconstructed=ReconstructionStep(cropped);
+			CMatrixNoColors *reconstructed=nonStandardReconstructionStep(cropped);
 			//CMatrixNoColors *actual_reconstructed=reconstructed->transpose();
 			iWaveletNoColors->substitute(reconstructed, row,row+1,0,g);
 
@@ -260,6 +260,100 @@ void CWavelet::Reconstruct()
 	this->recomposed=true;
 
 }
+
+//CMatrixNoColors* CWavelet::standardDeconstructionStep(CMatrixNoColors *aMatrix)
+//{
+//	
+//}
+void CWavelet::standardDeconstruction()
+{
+	if (withColors)
+	{
+		iWavelet->operator /(sqrt(iCols*1.0));
+		for (int row=0;row<iRows;row++)
+		{
+			int columns=iCols;
+			while (columns>=2)
+			{
+				CMatrix *cropped=iWavelet->crop(row,row+1,0,columns);
+				CMatrix *decomposed=nonStandardDeconstructionStep(cropped);
+				iWavelet->substitute(decomposed,row,row+1,0,columns);
+				columns/=2;
+			}
+		}
+		iWavelet->print();
+	}
+	else
+	{
+		iWaveletNoColors->operator /(sqrt(iCols*1.0));
+		for (int row=0;row<iRows;row++)
+		{
+			int columns=iCols;
+			while (columns>=2)
+			{
+				CMatrixNoColors *cropped=iWaveletNoColors->crop(row,row+1,0,columns);
+				CMatrixNoColors *decomposed=nonStandardDeconstructionStep(cropped);
+				iWaveletNoColors->substitute(decomposed,row,row+1,0,columns);
+				columns/=2;
+			}
+		}
+		iWaveletNoColors->print();
+
+	}
+	
+	decomposed=true;
+	recomposed=false;
+}
+
+void CWavelet::standardReconstruction()
+{
+	if (withColors)
+	{
+		for (int row=0;row<iRows;row++)
+		{
+			int columns=2;
+			while(columns<=iCols)
+			{
+				CMatrix *cropped= iWavelet->crop(row,row+1,0,columns);
+				CMatrix *reconstructed=nonStandardReconstructionStep(cropped);
+				iWavelet->substitute(reconstructed,row,row+1,0,columns);
+				columns*=2;
+			}
+		}
+		float temp=sqrt((float)iCols);
+		iWavelet->operator * ( temp );
+	} 
+	else
+	{
+	for (int row=0;row<iRows;row++)
+	{
+		int columns=2;
+		while(columns<=iCols)
+		{
+			CMatrixNoColors *cropped= iWaveletNoColors->crop(row,row+1,0,columns);
+			CMatrixNoColors *reconstructed=nonStandardReconstructionStep(cropped);
+			iWaveletNoColors->substitute(reconstructed,row,row+1,0,columns);
+			columns*=2;
+		}
+	}
+	float temp=sqrt((float)iCols);
+	iWaveletNoColors->operator * ( temp );
+	}
+	decomposed=false;
+	recomposed=true;
+}
+
+float* CWavelet::returnFloat()
+{
+	if(withColors)
+	{
+		printf("\n\nWavelet with colors cannot return float *, it is not yet implemented. \n\n");
+		return iWavelet->returnFloat();
+	}
+	else
+		return iWaveletNoColors->returnFloat();
+}
+
 
 //Pre-compute the sums for product calculation
 float CWavelet::ComputeParentSum( CWavelet aF, TSquare aS)
