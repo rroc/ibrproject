@@ -212,7 +212,9 @@ void CWavelet::Reconstruct()
 		g*=2;
 	
 	}
+	iWaveletNoColors->operator *(iCols);
 	}	
+
 	this->decomposed=false;
 	this->recomposed=true;
 

@@ -72,6 +72,9 @@ class TVector3
 		bool operator<( const float aV ) { return ( (iX<aV)&&(iY<aV)&&(iZ<aV) )? true:false; };
 		bool operator>( const float aV ) { return ( (iX>aV)&&(iY>aV)&&(iZ>aV) )? true:false; };
 
+		//print the Data Structure
+		void print();
+
 	public:
 		float iX; ///< The x-component of the vector
 		float iY; ///< The y-component of the vector
@@ -222,3 +225,8 @@ TVector3 TVector3::sphericalToVector(float aTheta, float aPhi  ) const
 	return ( TVector3( sinTheta*cosPhi, sinTheta*sinPhi, cosTheta ).normalize() );
 //	return TVector3(sin(aTheta)*cos(aPhi), sin(aTheta)*sin(aPhi), cos(aTheta));
 	}
+
+void inline TVector3::print()
+{
+	printf("%f     %f      %f", iX,iY,iZ);
+}

@@ -38,7 +38,7 @@ CMatrix::CMatrix(TVector3* aMatrix, int aRows, int aCols)
 	{
 		for(int cols=0; cols<aCols; cols++)
 		{
-			iMatrix.at(rows).at(cols)=*(aMatrix + rows*cols+ cols);
+			iMatrix.at(rows).at(cols)=*(aMatrix+rows*aCols+cols);
 		}
 	}
 
@@ -143,6 +143,19 @@ void CMatrix::operator /(float a)
 	}
 }
 
+
+void CMatrix::operator *(float a)
+{
+	
+	for(int rows=0;rows<iRows; rows++)
+	{
+		for(int cols=0; cols<iCols; cols++)
+		{
+			iMatrix.at(rows).at(cols)*=a;
+		}
+	}
+}
+
 void CMatrix::print()
 {
 	std::cout<<"\n not implemented yet";
@@ -150,7 +163,7 @@ void CMatrix::print()
 	{
 		for(int cols=0; cols<iCols; cols++)
 		{
-			//std::cout<<iMatrix.at(rows).at(cols);
+			iMatrix.at(rows).at(cols).print();
 		}
 		printf("\n");
 	}

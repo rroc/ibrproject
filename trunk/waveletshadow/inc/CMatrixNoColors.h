@@ -13,6 +13,7 @@ class CMatrixNoColors
 		CMatrixNoColors * transpose();
 		void print();
 		void operator /(float a);
+		void operator *(float a);
 		
 
 
