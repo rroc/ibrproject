@@ -163,7 +163,9 @@ void CMatrix::print()
 	{
 		for(int cols=0; cols<iCols; cols++)
 		{
+			printf("[ ");
 			iMatrix.at(rows).at(cols).print();
+			printf(" ]      ");
 		}
 		printf("\n");
 	}

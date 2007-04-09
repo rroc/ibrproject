@@ -68,9 +68,9 @@ CMatrixNoColors* CWavelet::DecompositionStep(CMatrixNoColors *aMatrix)
 {
 	CMatrixNoColors *temp= new CMatrixNoColors(aMatrix->iRows,aMatrix->iCols);
 	int limit=aMatrix->iCols/2;
-	printf("\nlimit=%d, iCols=%d",limit,aMatrix->iCols);
+	//printf("\nlimit=%d, iCols=%d",limit,aMatrix->iCols);
 
-	printf("\n decomposing the cropped.....\n result is \n");
+	//printf("\n decomposing the cropped.....\n result is \n");
 	for(int i=0; i<limit;i++)
 	{
 		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
@@ -102,45 +102,56 @@ CMatrixNoColors* CWavelet::ReconstructionStep(CMatrixNoColors *aMatrix)
 
 void CWavelet::Decompose()
 {
-	//if(withColors)
-	//{
-	//	int g;
-	//	g=iCols;
-	//	iWavelet->operator /(g);
+	if(withColors)
+	{
+		int g=iCols;
 
-	//	while (g>1)
-	//	{
-	//		for(int row=0;row<g; row++)
-	//		{
-	//			CMatrix* cropped = iWavelet->crop(row-1,row,0,g-1);
-	//			CMatrix* decomposed= DecompositionStep(cropped);
-	//			iWavelet->substitute(decomposed,row-1,row,0,g-1);				
-	//		}
+		//printf("\n original Matrix before decomposition..\n");
+		//iWavelet->print();
 
-	//		for(int cols=0;cols<g;cols++)
-	//		{
-	//			CMatrix* cropped= iWavelet->crop(0,g-1,cols-1,cols);
-	//			CMatrix *transposed= cropped->transpose();
-	//			CMatrix* decomposed= DecompositionStep(transposed);
-	//			CMatrix* actual_decomposed= decomposed->transpose();
+		iWavelet->operator / (static_cast<float>(g));
+		//		printf("\ng=%f,iCols=%d",g,iCols);
 
-	//			iWavelet->substitute(actual_decomposed, 0,g-1,cols-1,cols);
-	//		}
-	//		g=g/2.0;
-	//	}
-	//}
-	//else
-	//{
+		//printf("\nnormalized..\n");
+		//iWavelet->print();
+
+
+		while (g>=2)
+		{
+			for(int row=0;row<g; row++)
+			{
+				/*printf("\n----------");
+				printf("\ng=%f, iCols=%d", g, iCols);
+				printf("\nrow =%d, row+1 = %d, g-1=%d",row,row+1, (g));*/
+				CMatrix* cropped = iWavelet->crop(row,row+1,0, (g));
+				CMatrix* decomposed= DecompositionStep(cropped);
+				iWavelet->substitute(decomposed,row,row+1,0, (g));				
+			}
+
+			for(int cols=0;cols<g;cols++)
+			{
+				CMatrix* cropped= iWavelet->crop(0, (g),cols,cols+1);
+				CMatrix *transposed= cropped->transpose();
+				CMatrix* decomposed= DecompositionStep(transposed);
+				CMatrix* actual_decomposed= decomposed->transpose();
+				iWavelet->substitute(actual_decomposed, 0, (g),cols,cols+1);
+			}
+			g=g/2;
+			//printf("\ng=%f,iCols=%d",g,iCols);
+		}
+	}
+	else
+	{
 		int g=iCols;
 		
-		printf("\n original Matrix before decomposition..\n");
-		iWaveletNoColors->print();
+		//printf("\n original Matrix before decomposition..\n");
+		//iWaveletNoColors->print();
 
 		iWaveletNoColors->operator / (static_cast<float>(g));
 //		printf("\ng=%f,iCols=%d",g,iCols);
 
-		printf("\nnormalized..\n");
-		iWaveletNoColors->print();
+		//printf("\nnormalized..\n");
+		//iWaveletNoColors->print();
 
 		
 		while (g>=2)
@@ -166,10 +177,11 @@ void CWavelet::Decompose()
 			g=g/2;
 				//printf("\ng=%f,iCols=%d",g,iCols);
 		}
-	//}
-		printf("\n after decomposition....\n");
+	}
+	/*	printf("\n after decomposition....\n");
 		iWaveletNoColors->print();
 		printf("\n-------------------\n");
+	*/
 	this->decomposed=true;
 	this->recomposed=false;
 }
@@ -186,7 +198,36 @@ void CWavelet::print()
 
 void CWavelet::Reconstruct()
 {
-	if(!withColors)
+	if(withColors)
+	{
+		int g=2;
+		while(g<=iCols)
+		{
+			for(int col=0; col<g; col++)
+			{
+				CMatrix *cropped=iWavelet->crop(0,g,col,col+1);
+				CMatrix *transposed=cropped->transpose();
+				CMatrix *reconstructed=ReconstructionStep(transposed);
+				CMatrix *actual_reconstructed=reconstructed->transpose();
+				iWavelet->substitute(actual_reconstructed, 0, g,col,col+1);
+			}
+			for (int row=0;row<g;row++)
+			{
+				CMatrix *cropped=iWavelet->crop(row,row+1,0,g);
+				//CMatrix *transposed=cropped->transpose();
+				CMatrix *reconstructed=ReconstructionStep(cropped);
+				//CMatrix *actual_reconstructed=reconstructed->transpose();
+				iWavelet->substitute(reconstructed, row,row+1,0,g);
+
+
+			}
+			g*=2;
+
+		}
+		iWavelet->operator *(iCols);
+
+	}
+	else
 	{
 	int g=2;
 	while(g<=iCols)
