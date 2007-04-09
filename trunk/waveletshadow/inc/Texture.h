@@ -98,6 +98,6 @@ GLuint CreateTexture( TVector3* data, int width, int height );
 GLuint LoadCubeMapTextures( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
 
 GLuint LoadPFMTexture( string filename );
-
+GLuint LoadPFMCubeMap( string filename );
 
 #endif
