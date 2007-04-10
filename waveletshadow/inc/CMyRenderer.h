@@ -97,6 +97,7 @@ class CMyRenderer
 
 		void RenderObject(CMesh* aMesh);
 		void DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3]);
+		void DrawTriangle( TVector3* aVx, TColorRGBA aCol[3]);
 		void DrawCubemap();
 
 		//per Vertex cubemap
@@ -142,6 +143,8 @@ class CMyRenderer
 		vector<int> iTextures;
 		int iVertexMapTextures[6];
 		int iProbeMapTextures[6];
+
+		TVector3* iLightProbe;
 
 		CSceneNode* iScene;
 		vector<CMesh*> iMeshList;

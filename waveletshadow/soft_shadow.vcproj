@@ -37,7 +37,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="./inc/;"
-				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE _DEBUG"
 				OpenMP="true"
 				DebugInformationFormat="1"
 			/>
@@ -121,6 +121,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				LinkTimeCodeGeneration="1"
 			/>
 			<Tool
 				Name="VCALinkTool"

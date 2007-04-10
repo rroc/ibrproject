@@ -15,8 +15,8 @@ CMyRenderer* CMyRenderer::iCurrentRenderer = 0;
 
 static const float KEpsilon( 0.0001 );
 
-static const float	KObjectScale = 0.0045;
-static const string KObjectName = "simple4"; //"testscene" (1.0); "monster" (0.3); "gt16k" (0.0045); //"simple4";
+static const float	KObjectScale = 0.2f;
+static const string KObjectName = "monster"; //"testscene" (1.0); "monster" (0.3); "gt16k" (0.0045); //"simple4" (0.0045);
 static const string KObjectFileName = KObjectName+".obj";
 
 static const string KDataFileName	= KObjectName + "_coefficients.bin";
@@ -89,6 +89,10 @@ void CMyRenderer::LoadTextures()
 /// Init function for the constructors
 void CMyRenderer::InitMain()
 	{
+#ifdef USE_OPENMP
+	omp_set_num_threads( 3 );
+#endif
+
 	glMatrixMode( GL_VIEWPORT );
 	glViewport(0, 0, (GLsizei)iScreenWidth, (GLsizei)iScreenHeight);
 	glMatrixMode(GL_PROJECTION);
@@ -332,14 +336,21 @@ void CMyRenderer::InitVertexMap()
 	iTextures.push_back( iVertexMapTextures[4] );
 	iTextures.push_back( iVertexMapTextures[5] );
 
-	int m = LoadPFMCubeMap("church_cubemap_32.pfm");
+	iLightProbe = LoadPFMCubeMap("church_cubemap_32.pfm", &iProbeMapTextures[0] );
 
-	iProbeMapTextures[0] = m;
-	iProbeMapTextures[1] = m+1;
-	iProbeMapTextures[2] = m+2;
-	iProbeMapTextures[3] = m+3;
-	iProbeMapTextures[4] = m+4;
-	iProbeMapTextures[5] = m+5;
+	if(	iLightProbe == NULL )
+		{
+		printf("No light probe.");
+		exit(-1);
+		}
+	else
+		{
+		printf("Light probe ok.");
+		//printf("P_: 0x%X\n", iLightProbe);
+		//printf("[%f, %f, %f]\n", iLightProbe->iX, iLightProbe->iY, iLightProbe->iZ);
+		}
+
+	printf("[%d, %d, %d, %d, %d, %d]\n",iProbeMapTextures[0],iProbeMapTextures[1],iProbeMapTextures[2],iProbeMapTextures[3],iProbeMapTextures[4],iProbeMapTextures[5]);
 
 	iTextures.push_back( iProbeMapTextures[0] );
 	iTextures.push_back( iProbeMapTextures[1] );
@@ -347,7 +358,6 @@ void CMyRenderer::InitVertexMap()
 	iTextures.push_back( iProbeMapTextures[3] );
 	iTextures.push_back( iProbeMapTextures[4] );
 	iTextures.push_back( iProbeMapTextures[5] );
-
 	}
 
 
@@ -510,63 +520,77 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 	{
 	TTriangle t;
 
-	//vertice count
+	//vertex count
 	int vertCount(	 static_cast<int>( aMesh->iVertices.size()    ) );
-	int normalCount( static_cast<int>( aMesh->iFaceNormals.size() ) );
+//	int normalCount( static_cast<int>( aMesh->iFaceNormals.size() ) );
 
 	TVector3  vx[3];
-	TVector3  nv[3];
+//	TVector3  nv[3];
 	TColorRGBA colors[3];
-	float brightness(1.0);
+	const int numberOfVC = KSamplingResolution*KSamplingResolution*6;
 
-	//Only opague objects have PRT calculated
+	//CALCULATE VERTEX COLORS
 	if( 1.0 == aMesh->iMaterialColor.iA )
 		{
-		/*
-		iTempVertexColors.clear();
-		for(int i=0, endi=aMesh->iVertices.size(); i<endi; i++)
-		{
-		brightness=0.0;
+		float visibility;
+		aMesh->iVertexColors.resize(vertCount);
 
-		for(int j=0, endj = iSampleData->iNumberOfFunctions; j<endj; ++j)
-		{
-		brightness += iLightData->iRotatedSHSCoefficients.at( j ) * aMesh->iVertexShadowedLightCoefficients.at( i ).at( j ); // (number of vertices, number of functions)
+#ifdef USE_OPENMP
+#pragma omp parallel for private( visibility )
+#endif
+		for (int vertex=0;vertex<vertCount;vertex++)
+			{
+			TColorRGBA color;
+			for(int i=0; i<numberOfVC; i++)
+				{
+				visibility = (aMesh->iVisibilityCoefficients.at(vertex).at(i));
+				color.iR += visibility * (iLightProbe+i)->iX;
+				color.iG += visibility * (iLightProbe+i)->iY;
+				color.iB += visibility * (iLightProbe+i)->iZ;
+				}
+			color /= numberOfVC;			
+			aMesh->iVertexColors.at(vertex) = color;
+			}
 		}
-		//			brightness /= iSampleData->iNumberOfFunctions;
-		brightness *= 1.5; //pow((brightness), 4 );
-		brightness *= brightness;
-		brightness *= brightness;
-		brightness *= 1.5;
 
-		iTempVertexColors.push_back( brightness );
-		}
-		*/
-		}
 
-	//Go through the Mesh Polygon by polygon
+	//DRAW POLYGONS
 	for (int triangleIndex=0, triangleCount=static_cast<int>(aMesh->iTriangles.size()); triangleIndex<triangleCount; triangleIndex++)
 		{
 		//Current triangle
 		t = aMesh->iTriangles.at(triangleIndex);
 
-		//check that there is enough vertices in the vertices list
-//		if( (t.iV1<=vertCount ) && (t.iV2<=vertCount) && (t.iV3<=vertCount) )
+		//VERTICES
+		vx[0] = aMesh->iVertices.at(t.iV1);
+		vx[1] = aMesh->iVertices.at(t.iV2);
+		vx[2] = aMesh->iVertices.at(t.iV3);
+
+		//NORMALS
+		//nv[0] = aMesh->iVertexNormals.at(t.iV1);
+		//nv[1] = aMesh->iVertexNormals.at(t.iV2);
+		//nv[2] = aMesh->iVertexNormals.at(t.iV3);
+
+
+		//Only opaque objects have PRT calculated
+		if( 1.0 == aMesh->iMaterialColor.iA )
 			{
-			//VERTICES
-			vx[0] = aMesh->iVertices.at(t.iV1);
-			vx[1] = aMesh->iVertices.at(t.iV2);
-			vx[2] = aMesh->iVertices.at(t.iV3);
-
-			//NORMALS
-			nv[0] = aMesh->iVertexNormals.at(t.iV1);
-			nv[1] = aMesh->iVertexNormals.at(t.iV2);
-			nv[2] = aMesh->iVertexNormals.at(t.iV3);
-
-			colors[0] = aMesh->iMaterialColor;
-			colors[1] = aMesh->iMaterialColor;
-			colors[2] = aMesh->iMaterialColor;
-			DrawTriangle( &vx[0], &nv[0], &colors[0] );
+			colors[0] = aMesh->iVertexColors.at(t.iV1);
+			colors[1] = aMesh->iVertexColors.at(t.iV2);
+			colors[2] = aMesh->iVertexColors.at(t.iV3);
 			}
+		else
+			{
+			colors[0] = 1.0f;
+			colors[1] = 1.0f;
+			colors[2] = 1.0f;
+			}
+
+		colors[0] *= aMesh->iMaterialColor;
+		colors[1] *= aMesh->iMaterialColor;
+		colors[2] *= aMesh->iMaterialColor;
+
+		//DrawTriangle( &vx[0], &nv[0], &colors[0] );
+		DrawTriangle( &vx[0], &colors[0] );
 		}
 	}
 
@@ -734,10 +758,6 @@ void CMyRenderer::PreCalculateDirectLight()
 	printf("Calculating vertex:         " );
 
 	CMesh* currentMesh;
-
-#ifdef USE_OPENMP
-	omp_set_num_threads( 3 );
-#endif
 
 	//FOR EACH OBJECT...
 	for(int i=0; i<numObjects; ++i)
@@ -975,7 +995,7 @@ void CMyRenderer::DrawMap()
 	glEnable( GL_TEXTURE_2D );
 
 	//roof
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iVertexMapTextures[0] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
 	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
@@ -984,7 +1004,7 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//left
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iVertexMapTextures[1] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
@@ -993,7 +1013,7 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//front
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iVertexMapTextures[2] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
@@ -1002,7 +1022,7 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//right
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iVertexMapTextures[3] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
@@ -1011,7 +1031,7 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//floor
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iVertexMapTextures[4] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
@@ -1020,7 +1040,7 @@ void CMyRenderer::DrawMap()
 	glEnd();
 
 	//back
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iVertexMapTextures[5] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
@@ -1066,7 +1086,7 @@ void CMyRenderer::DrawProbe()
 	glEnable( GL_TEXTURE_2D );
 
 	//roof
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iProbeMapTextures[0]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[0] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
 	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
@@ -1075,7 +1095,7 @@ void CMyRenderer::DrawProbe()
 	glEnd();
 
 	//left
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iProbeMapTextures[1]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[1] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
@@ -1084,7 +1104,7 @@ void CMyRenderer::DrawProbe()
 	glEnd();
 
 	//front
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iProbeMapTextures[2]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[2] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
@@ -1093,7 +1113,7 @@ void CMyRenderer::DrawProbe()
 	glEnd();
 
 	//right
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iProbeMapTextures[3]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[3] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
@@ -1102,7 +1122,7 @@ void CMyRenderer::DrawProbe()
 	glEnd();
 
 	//floor
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iProbeMapTextures[4]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[4] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
@@ -1111,7 +1131,7 @@ void CMyRenderer::DrawProbe()
 	glEnd();
 
 	//back
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iProbeMapTextures[5]-1 ) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[5] ) );
 	glBegin(GL_QUADS);
 	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
 	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
@@ -1133,136 +1153,37 @@ void CMyRenderer::DrawProbe()
 
 
 
-//void CMyRenderer::DrawMap()
-//	{
-//	glDisable(GL_LIGHTING);
-//
-//	if(iCubeMapVertex > iSceneGraph.at(0)->iVisibilityCoefficients.size())
-//		{
-//		iCubeMapVertex = 0;
-//		}
-//
-//	glColor3f( 1.0f,1.0f,0.0);
-//	glTranslatef( iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iX, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iY, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iZ );
-//	glutSolidSphere(0.05f, 16,16);
-//
-//
-//	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
-//	//glDisable(GL_DEPTH_TEST);
-//
-//	glMatrixMode(GL_PROJECTION);
-//	glPushMatrix();
-//	glLoadIdentity();
-//
-//	gluOrtho2D( 0, iScreenWidth, 0, iScreenHeight );
-//
-//	glMatrixMode(GL_MODELVIEW);
-//	glPushMatrix();
-//	glLoadIdentity();
-//
-//	//	glTranslatef(0.375f, 1.5f, 0.0f);
-//
-//	glColor3f(1.0, 1.0, 1.0 );
-//
-//	const int size = 64;
-//	const int size2 = size*2;
-//	const int translateY = iScreenHeight - (20 + size );
-//	const int translateX = iScreenWidth-(size2+20);
-//
-//	glEnable( GL_TEXTURE_2D );
-//
-//	int offSet = KSamplingResolution*KSamplingResolution;
-//	//roof
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
-//
-//	glBegin(GL_QUADS);
-//	glTexCoord2f(0,0);		 glVertex2i( translateX,		translateY );
-//	glTexCoord2f(1.0f,0);	 glVertex2i( size+translateX,	translateY );
-//	glTexCoord2f(1.0f,1.0f); glVertex2i( size+translateX,	size+translateY );
-//	glTexCoord2f(0,1.0f);	 glVertex2i( translateX,		size+translateY );
-//	glEnd();
-//
-//	//left
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
-//	glBegin(GL_QUADS);
-//	glTexCoord2f(0,0);		glVertex2i(-size+translateX,	-size+translateY);
-//	glTexCoord2f(1.0f,0);	glVertex2i( translateX,			-size+translateY);
-//	glTexCoord2f(1.0f,1.0f);glVertex2i( translateX,			translateY);
-//	glTexCoord2f(0,1.0f);	glVertex2i(-size+translateX,	translateY);
-//	glEnd();
-//
-//	//front
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
-//	glBegin(GL_QUADS);
-//	glTexCoord2f(0,0);		glVertex2i(translateX,		-size+translateY);
-//	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size+translateY);
-//	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	translateY);
-//	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		translateY);
-//	glEnd();
-//
-//	//right
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
-//	glBegin(GL_QUADS);
-//	glTexCoord2f(0,0);		glVertex2i(size+translateX,		-size+translateY);
-//	glTexCoord2f(1.0f,0);	glVertex2i(size2 + translateX,	-size+translateY);
-//	glTexCoord2f(1.0f,1.0f);glVertex2i(size2 + translateX,	translateY);
-//	glTexCoord2f(0,1.0f);	glVertex2i(size+translateX,		translateY);
-//	glEnd();
-//
-//	//floor
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
-//	glBegin(GL_QUADS);
-//	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 +translateY);
-//	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 +translateY);
-//	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	-size+translateY);
-//	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		-size+translateY);
-//	glEnd();
-//
-//	//back
-//	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
-//	glBegin(GL_QUADS);
-//	glTexCoord2f(0,0);		glVertex2i(translateX,		-size2 -size +translateY);
-//	glTexCoord2f(1.0f,0);	glVertex2i(size+translateX,	-size2 - size +translateY);
-//	glTexCoord2f(1.0f,1.0f);glVertex2i(size+translateX,	-size2 + translateY);
-//	glTexCoord2f(0,1.0f);	glVertex2i(translateX,		-size2 + translateY);
-//	glEnd();
-//
-//	glDisable( GL_TEXTURE_2D );
-//
-//	glDepthFunc(GL_LESS);	// normal depth buffering
-//	//glEnable(GL_DEPTH_TEST);
-//
-//	glMatrixMode(GL_PROJECTION);
-//	glPopMatrix();
-//
-//	glMatrixMode(GL_MODELVIEW);
-//	glPopMatrix();
-//	}
-
-
-
 void CMyRenderer::DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3])
 	{
 	glBegin(iWireFrame);
 	glColor4fv( &aCol[0].iR );
-//	glNormal3f(aNv[0].iX, aNv[0].iY, aNv[0].iZ);
+	glNormal3f(aNv[0].iX, aNv[0].iY, aNv[0].iZ);
 	glVertex3f(aVx[0].iX, aVx[0].iY, aVx[0].iZ);
 
 	glColor4fv( &aCol[1].iR );
-//	glNormal3f(aNv[1].iX, aNv[1].iY, aNv[1].iZ);
+	glNormal3f(aNv[1].iX, aNv[1].iY, aNv[1].iZ);
 	glVertex3f(aVx[1].iX, aVx[1].iY, aVx[1].iZ);
 
 	glColor4fv( &aCol[2].iR );
-//	glNormal3f(aNv[2].iX, aNv[2].iY, aNv[2].iZ);
+	glNormal3f(aNv[2].iX, aNv[2].iY, aNv[2].iZ);
 	glVertex3f(aVx[2].iX, aVx[2].iY, aVx[2].iZ);
 	glEnd();
 	}
+
+void CMyRenderer::DrawTriangle( TVector3* aVx, TColorRGBA aCol[3])
+	{
+	glBegin(iWireFrame);
+	glColor4fv( &aCol[0].iR );
+	glVertex3f(aVx[0].iX, aVx[0].iY, aVx[0].iZ);
+
+	glColor4fv( &aCol[1].iR );
+	glVertex3f(aVx[1].iX, aVx[1].iY, aVx[1].iZ);
+
+	glColor4fv( &aCol[2].iR );
+	glVertex3f(aVx[2].iX, aVx[2].iY, aVx[2].iZ);
+	glEnd();
+	}
+
 
 //Resize the window for GLUT
 //--------------------------

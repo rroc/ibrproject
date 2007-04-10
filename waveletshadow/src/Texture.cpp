@@ -780,7 +780,7 @@ GLuint LoadPFMTexture( string filename )
 	imageData.clear();
 	}
 
-GLuint LoadPFMCubeMap( string filename )
+TVector3* LoadPFMCubeMap( string filename, int aTextureIds[6] )
 	{
 	FILE *infile = fopen(filename.c_str(), "rb");
 
@@ -925,21 +925,55 @@ GLuint LoadPFMCubeMap( string filename )
 
 //	printf("[%f, %f, %f] - [%f, %f, %f]", data->iX,data->iY,data->iZ,  (data+dOffSet)->iX,(data+dOffSet)->iY,(data+dOffSet)->iZ );
 	first  = fixed;
-	second = fixed+faceSize;
-	third  = fixed+faceSize*2;
+	//second = fixed+faceSize;
+	//third  = fixed+faceSize*2;
+	TVector3* temp = (data+faceSize*2);
+	for( int i=0; i<faceSize*3; i++)
+		{
+		*temp++ = *first++;
+		}
 
 	int offSet = widthFace*heightFace;
-	int pfmTextures[6];
-	pfmTextures[0] = CreateTexture( data+offSet*5, widthFace, heightFace );
-	pfmTextures[1] = CreateTexture( third, widthFace, heightFace );
-	pfmTextures[2] = CreateTexture( second, widthFace, heightFace ); //!!!
-	pfmTextures[3] = CreateTexture( first, widthFace, heightFace );
-	pfmTextures[4] = CreateTexture( data+offSet  , widthFace, heightFace );
-	pfmTextures[5] = CreateTexture( data         , widthFace, heightFace );
+
+	first  = data;
+	second = data+offSet;
+	third  = data+offSet*2;
+	TVector3* fourth = data+offSet*3;
+	TVector3* fifth = data+offSet*4;
+	TVector3* sixth = data+offSet*5;
+	TVector3* tempVec = fixed;
+
+	//SWAP
+	for(int i=0;i<offSet;i++)
+		{
+		//1<->6
+		*(tempVec+i) = *(first+i);
+		*(first+i) = *(sixth+i);
+		*(sixth+i) = *(tempVec+i);
+
+		//2<->5
+		*(tempVec+i) = *(second+i);
+		*(second+i)= *(fifth+i);
+		*(fifth+i) = *(tempVec+i);
+
+		//3<->4
+		*(tempVec+i) = *(third+i);
+		*(third+i) = *(fourth+i);
+		*(fourth+i) = *(tempVec+i);
+		}
+
+	aTextureIds[0] = CreateTexture( data, widthFace, heightFace );
+	aTextureIds[1] = CreateTexture( data+offSet,   widthFace, heightFace );
+	aTextureIds[2] = CreateTexture( data+offSet*2, widthFace, heightFace );
+	aTextureIds[3] = CreateTexture( data+offSet*3, widthFace, heightFace );
+	aTextureIds[4] = CreateTexture( data+offSet*4, widthFace, heightFace );
+	aTextureIds[5] = CreateTexture( data+offSet*5, widthFace, heightFace );
 
 	delete[] fixed;
-	delete[] data;
-	return pfmTextures[0];
+//	delete[] data; //Will be freed by the caller
+
+//	printf("[%f, %f, %f] - 0x%X\n", data->iX,data->iY,data->iZ, data );
+	return data;
 	}
 
 
