@@ -332,21 +332,21 @@ void CMyRenderer::InitVertexMap()
 	iTextures.push_back( iVertexMapTextures[4] );
 	iTextures.push_back( iVertexMapTextures[5] );
 
-	//int m = LoadPFMCubeMap("church_cubemap_32.pfm");
+	int m = LoadPFMCubeMap("church_cubemap_32.pfm");
 
-	//iProbeMapTextures[0] = m;
-	//iProbeMapTextures[1] = m+1;
-	//iProbeMapTextures[2] = m+2;
-	//iProbeMapTextures[3] = m+3;
-	//iProbeMapTextures[4] = m+4;
-	//iProbeMapTextures[5] = m+5;
+	iProbeMapTextures[0] = m;
+	iProbeMapTextures[1] = m+1;
+	iProbeMapTextures[2] = m+2;
+	iProbeMapTextures[3] = m+3;
+	iProbeMapTextures[4] = m+4;
+	iProbeMapTextures[5] = m+5;
 
-	//iTextures.push_back( iProbeMapTextures[0] );
-	//iTextures.push_back( iProbeMapTextures[1] );
-	//iTextures.push_back( iProbeMapTextures[2] );
-	//iTextures.push_back( iProbeMapTextures[3] );
-	//iTextures.push_back( iProbeMapTextures[4] );
-	//iTextures.push_back( iProbeMapTextures[5] );
+	iTextures.push_back( iProbeMapTextures[0] );
+	iTextures.push_back( iProbeMapTextures[1] );
+	iTextures.push_back( iProbeMapTextures[2] );
+	iTextures.push_back( iProbeMapTextures[3] );
+	iTextures.push_back( iProbeMapTextures[4] );
+	iTextures.push_back( iProbeMapTextures[5] );
 
 	}
 
@@ -465,7 +465,7 @@ void CMyRenderer::RenderScene()
 	glDisable(GL_BLEND);
 
 	DrawMap();
-//	DrawProbe();
+ 	DrawProbe();
 
 	ShowFPS();
 

@@ -678,6 +678,7 @@ GLuint CreateTexture(float* data, int width, int height )
 	return(texId);
 	}
 
+
 GLuint CreateTexture(TVector3* data, int width, int height )
 	{
 	GLuint texId; 
@@ -693,20 +694,27 @@ GLuint CreateTexture(TVector3* data, int width, int height )
 
 	for (int i=0,endI=width*height;i<endI;i++)
 		{
-//		int val = 0xFF * *(data+i);
-		*(checkImage+i*4)   = (GLubyte)0xFF * (data+i)->iX; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
-		*(checkImage+i*4+1) = (GLubyte)0xFF * (data+i)->iY; //green
-		*(checkImage+i*4+2) = (GLubyte)0xFF * (data+i)->iZ; //blue
+//		printf("[%f, %f, %f]\n", (data+i)->iX, (data+i)->iY, (data+i)->iZ);
+		*(checkImage+i*4)   = (GLubyte)0xFF * pow((data+i)->iX, 0.7f); //red
+		*(checkImage+i*4+1) = (GLubyte)0xFF * pow((data+i)->iY, 0.7f); //green
+		*(checkImage+i*4+2) = (GLubyte)0xFF * pow((data+i)->iZ, 0.7f); //blue
 		*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
-		}
-	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+		if( pow((data+i)->iX, 0.7f) > 1.0 )
+			*(checkImage+i*4) = 0xFF; 
+		if( pow((data+i)->iY, 0.7f) > 1.0 )
+			*(checkImage+i*4+1) = 0xFF; 
+		if( pow((data+i)->iZ, 0.7f) > 1.0 )
+			*(checkImage+i*4+2) = 0xFF; 
+		}
+
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
 	delete[] checkImage;
 #else
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 1, GL_RGB, GL_FLOAT, data );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(data->iX)) );
 #endif
-	printf("Created a luminance texture: %d\n",texId);
+	printf("Created a color texture: %d\n",texId);
 	return(texId);
 	}
 
@@ -802,6 +810,7 @@ GLuint LoadPFMCubeMap( string filename )
 
 	int widthFace = width/3;
 	int heightFace = height/4;
+	int faceSize = widthFace*heightFace;
 
 	TVector3* data = new TVector3[width*height];
 
@@ -822,7 +831,7 @@ GLuint LoadPFMCubeMap( string filename )
 
 	printf("Face: %d x %d\n", widthFace, heightFace );
 
-	TVector3 *cur = reinterpret_cast<TVector3*>( data );
+	TVector3 *cur = data;
 	for(int j = 0; j < height; j++)
 		{
 		if (fread(fbuf, sizeof(float), fileType, infile) != (size_t) fileType)
@@ -831,6 +840,7 @@ GLuint LoadPFMCubeMap( string filename )
 			delete fbuf;
 			return 0;
 			}
+
 		float *temp = fbuf;
 		for (int i = 0; i < width; i++)
 			{
@@ -848,9 +858,9 @@ GLuint LoadPFMCubeMap( string filename )
 					cur->iX = *temp++;
 					cur->iY = *temp++;
 					cur->iZ = *temp++;
-#ifdef _DEBUG
-					printf("(%d,%d): [%f, %f, %f]\n",i,j,cur->iX,cur->iY,cur->iZ);
-#endif
+//#ifdef _DEBUG
+//					printf("(%d,%d): [%f, %f, %f]\n",i,j,cur->iX,cur->iY,cur->iZ);
+//#endif
 					}
 				else			// black and white
 					{
@@ -860,6 +870,7 @@ GLuint LoadPFMCubeMap( string filename )
 					}
 				cur++;
 				}
+			//empty
 			else
 				{
 				if (formatRGB)			// color
@@ -876,31 +887,58 @@ GLuint LoadPFMCubeMap( string filename )
 	delete fbuf;
 	fclose(infile);
 
-	//FLIP VERTICAL
-	int top = height - 1;
-	int bottom = 0;
-	TVector3 temp;
-	while (top > bottom)
+
+	//FIX center row
+	TVector3* fixer = (data+faceSize*2); //first row should be ok
+	TVector3* fixed  = new TVector3[faceSize*3];
+	TVector3* first  = fixed;
+	TVector3* second = fixed+faceSize;
+	TVector3* third  = fixed+faceSize*2;
+
+	for (int j=0;j<heightFace;j++)
 		{
-		//Swap line
-		for (int i = 0; i < width; i++)
-			{	
-			temp = *(data+(formatRGB*width+i));
-			*(data+(bottom*width+i)) = *(data+(top*width+i));
-			*(data+(top*width+i)) = temp;
+		for (int i=0; i<width;i++)
+			{
+//			printf("%d: ",i);
+			if(i<widthFace)
+				{
+//				printf("third");
+				*third++ = *fixer;
+				}
+			else if(i>=widthFace && i<widthFace*2)
+				{
+//				printf("second");
+				*second++ = *fixer;
+				}
+			else
+				{
+//				printf("first");
+				*first++ = *fixer;
+				}
+//			printf(" (%f,%f,%f)\n",fixer->iX,fixer->iY,fixer->iZ);
+			fixer++;
 			}
-		top--;
-		bottom++;
 		}
 
-	int pfmTextures[6];
-	pfmTextures[0] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
-	pfmTextures[1] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
-	pfmTextures[2] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
-	pfmTextures[3] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
-	pfmTextures[4] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
-	pfmTextures[5] = CreateTexture( reinterpret_cast<TVector3*>( data ), widthFace, heightFace );
+	//int dOffSet = (widthFace*heightFace*6) -1;
+	//printf("FIRST/LAST: [%f, %f, %f] / [%f, %f, %f]\n", data->iX,data->iY,data->iZ,  (data+dOffSet)->iX,(data+dOffSet)->iY,(data+dOffSet)->iZ );
 
+//	printf("[%f, %f, %f] - [%f, %f, %f]", data->iX,data->iY,data->iZ,  (data+dOffSet)->iX,(data+dOffSet)->iY,(data+dOffSet)->iZ );
+	first  = fixed;
+	second = fixed+faceSize;
+	third  = fixed+faceSize*2;
+
+	int offSet = widthFace*heightFace;
+	int pfmTextures[6];
+	pfmTextures[0] = CreateTexture( data+offSet*5, widthFace, heightFace );
+	pfmTextures[1] = CreateTexture( third, widthFace, heightFace );
+	pfmTextures[2] = CreateTexture( second, widthFace, heightFace ); //!!!
+	pfmTextures[3] = CreateTexture( first, widthFace, heightFace );
+	pfmTextures[4] = CreateTexture( data+offSet  , widthFace, heightFace );
+	pfmTextures[5] = CreateTexture( data         , widthFace, heightFace );
+
+	delete[] fixed;
+	delete[] data;
 	return pfmTextures[0];
 	}
 

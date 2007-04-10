@@ -26,10 +26,6 @@ class TVector3
 			: iX(aX)
 			, iY(aY)
 			, iZ(aZ) {};
-		TVector3( unsigned int aColor, float aX, float aY, float aZ )
-			: iX(aX)
-			, iY(aY)
-			, iZ(aZ) {};
 
 		void set( float aX, float aY, float aZ ) { iX=aX; iY=aY; iZ=aZ; };
 		void set( const TVector3& aVector ) { iX=aVector.iX; iY=aVector.iY; iZ=aVector.iZ; };
