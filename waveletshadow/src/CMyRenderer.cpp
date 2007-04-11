@@ -16,7 +16,7 @@ CMyRenderer* CMyRenderer::iCurrentRenderer = 0;
 static const float KEpsilon( 0.0001 );
 
 static const float	KObjectScale = 0.2f;
-static const string KObjectName = "monster"; //"testscene" (1.0); "monster" (0.3); "gt16k" (0.0045); //"simple4" (0.0045);
+static const string KObjectName = "monster"; //"testscene" (1.0); "monster" (0.2); "gt16k" (0.0045); //"simple4" (0.0045);
 static const string KObjectFileName = KObjectName+".obj";
 
 static const string KDataFileName	= KObjectName + "_coefficients.bin";
@@ -112,6 +112,8 @@ void CMyRenderer::InitMain()
 	PrecomputedRadianceTransfer();
 
 	InitVertexMap();
+
+	InitHashTables();
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
@@ -360,6 +362,36 @@ void CMyRenderer::InitVertexMap()
 	iTextures.push_back( iProbeMapTextures[5] );
 	}
 
+void CMyRenderer::InitHashTables()
+	{
+	const int numberOfCoefficients = KSamplingResolution*KSamplingResolution*6;
+	for(int object=0, endI=iSceneGraph.size(); object<endI; object++)
+		{
+		int numberOfVertices = iSceneGraph.at(object)->iVertices.size();
+		iSceneGraph.at(object)->iVisibilityHash.resize( numberOfVertices );
+
+		for( int vertex=0;vertex<numberOfVertices; vertex++)
+			{
+			for(int coefficient=0; coefficient<numberOfCoefficients; coefficient++)
+				{
+				float value=iSceneGraph.at(object)->iVisibilityCoefficients.at(vertex).at(coefficient);
+				//store the non-empty
+				if( 0.0f != value )
+					{
+					TSquare key( 0, 0, coefficient );
+					iSceneGraph.at(object)->iVisibilityHash.at(vertex).insert( make_pair(key, value) );
+					}
+				//else
+				//	{
+				//	}
+				}
+//			printf("[%d: %d] = %d\n", object, vertex, iSceneGraph.at(object)->iVisibilityHash.at(vertex).size() );
+//			iSceneGraph.at(object)->iVisibilityCoefficients.at(vertex).clear();
+			}
+//		iSceneGraph.at(object)->iVisibilityCoefficients.clear();
+		}
+	}
+
 
 void CMyRenderer::ChangeVertexMap()
 	{
@@ -535,24 +567,34 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 		float visibility;
 		aMesh->iVertexColors.resize(vertCount);
 
+		THashTable::iterator it;		
+		THashTable::iterator itEnd;		
+		//THashTable::iterator probeIt;
+		int index(0);
+
 #ifdef USE_OPENMP
-#pragma omp parallel for private( visibility )
+#pragma omp parallel for private( index, it, itEnd )
 #endif
 		for (int vertex=0;vertex<vertCount;vertex++)
 			{
 			TColorRGBA color;
-			for(int i=0; i<numberOfVC; i++)
+
+			//Browse through the hash
+			it		= aMesh->iVisibilityHash.at(vertex).begin();
+			itEnd	= aMesh->iVisibilityHash.at(vertex).end();
+
+			while( it != itEnd )
 				{
-				visibility = (aMesh->iVisibilityCoefficients.at(vertex).at(i));
-				color.iR += visibility * (iLightProbe+i)->iX;
-				color.iG += visibility * (iLightProbe+i)->iY;
-				color.iB += visibility * (iLightProbe+i)->iZ;
+				index = it->first.y;
+				color.iR += it->second * (iLightProbe+index)->iX;
+				color.iG += it->second * (iLightProbe+index)->iY;
+				color.iB += it->second * (iLightProbe+index)->iZ;				
+				it++;
 				}
-			color /= numberOfVC;			
-			aMesh->iVertexColors.at(vertex) = color;
+			//do the averaging
+			aMesh->iVertexColors.at(vertex) = color/aMesh->iVisibilityHash.at(vertex).size();
 			}
 		}
-
 
 	//DRAW POLYGONS
 	for (int triangleIndex=0, triangleCount=static_cast<int>(aMesh->iTriangles.size()); triangleIndex<triangleCount; triangleIndex++)
