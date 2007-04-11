@@ -89,6 +89,7 @@ class CMyRenderer
 		void InitMain();
 		void InitLights();
 		void InitVertexMap();
+		void InitHashTables();
 
 		//Constructors will call this one
 		void CreateScene();

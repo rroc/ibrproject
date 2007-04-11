@@ -3,7 +3,7 @@
 #include "TTriangle.h"
 #include "TVector3.h"
 #include "TColorRGBA.h"
-
+#include "THashtable.h"
 
 /** \brief Main 3D graphic object class
 *
@@ -54,7 +54,8 @@ class CMesh {
 
 
 		//per mesh we store (KSamplingResolution*KSamplingResolution*6) floats
-		vector< vector<float> >		iVisibilityCoefficients;
+		vector< vector<float> >	iVisibilityCoefficients;
+		vector< THashTable >	iVisibilityHash;
 
 		int iTextureId;
 	};
