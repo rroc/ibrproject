@@ -1,9 +1,9 @@
-function c = nonstandaddecomposition( c )
+function c = nonstandarddecomposition( c )
 
 g = size(c,2);
 c = c/g;
 
-while g >=2  
+while g >=2
     %see all the rows
     for row=1:g
         for color=1:3

@@ -1,6 +1,6 @@
 function c=reconstruction(c)
 
-format long
+%format long
 
 rows=size(c,1);
 
