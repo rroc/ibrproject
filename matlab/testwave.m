@@ -2,8 +2,8 @@ function testwave()
 
 %clc
 
-%image=[9 7 3 5];
-image=[9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5];
+image=[9 7 3 5];
+%image=[9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5 9 7 3 5];
 %image=[0 0 0 1];
 de = decomposition( image );
 re = reconstruction( de );
