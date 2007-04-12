@@ -28,7 +28,7 @@ for x=0: (1/dsize) :(1-(1/dsize))
             dIndex = dIndex+1;
             d = (decomposed(dIndex));
             wfvalue = wf(j,k-1,x);
-            sum = sum + d * wfvalue;            
+            sum = sum + d * d * wfvalue;            
         end;
     end;
 
