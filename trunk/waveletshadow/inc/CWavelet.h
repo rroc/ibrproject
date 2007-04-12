@@ -39,6 +39,7 @@ class CWavelet
 		
 
 		float* returnFloat();
+		float* returnScaledFloat();
 
 	private:	
 		float ComputeParentSum( CWavelet aF, TSquare aS);

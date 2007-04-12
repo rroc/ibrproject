@@ -61,6 +61,7 @@ class CMyRenderer
 		void UpdateScene();
 
 		void ChangeVertexMap();
+		void ChangeLightProbeMap();
 
 
 

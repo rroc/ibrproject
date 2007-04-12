@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "CMatrix.h"
+#include <math.h>
 
 CMatrix::CMatrix()
 {
@@ -187,6 +188,23 @@ void CMatrix::print()
 
 }
 
+float* CMatrix::returnScaledFloat()
+{
+	const float scale = 13;
+	const float factor= 0.6f;
+	float *p=new float[iRows*iCols*3];
+	for (int rows=0;rows<iRows;rows++)
+	{
+		for (int cols=0; cols<iCols;cols++)
+		{
+			( *(p+rows*iCols*3+cols*3) )  = pow(iMatrix.at(rows).at(cols).iX * scale, factor);
+			( *(p+rows*iCols*3+cols*3+1) )= pow(iMatrix.at(rows).at(cols).iY * scale, factor);
+			( *(p+rows*iCols*3+cols*3+2) )= pow(iMatrix.at(rows).at(cols).iZ * scale, factor);
+		}
+	}
+
+	return p;
+}
 float* CMatrix::returnFloat()
 {
 	float *p=new float[iRows*iCols*3];
