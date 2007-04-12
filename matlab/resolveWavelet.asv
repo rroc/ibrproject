@@ -1,0 +1,26 @@
+function r=resolveWavelet( decomposed )
+
+dsize = size(decomposed, 2);
+levels = log2(dsize);
+    
+dIndex=1;
+
+r(1:dsize)=0;
+for x=0: (1/dsize) :1
+    
+    %first is the scaling coefficient
+    sum = decomposed(dIndex);
+        
+    %rest are detail coefficients, 
+    % for each level
+    for j=0:(levels-1)
+        
+        %for each index in the leve
+        for(index=0:(dsize/j)-1 )
+            
+            %take the next detail coefficient
+            dIndex = dIndex+1;
+            sum = sum + decomposed(dIndex) * wf(j,k,x);
+            
+        end;
+    end;
