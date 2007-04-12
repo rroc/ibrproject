@@ -1,5 +1,6 @@
 function c=decomposition(c)
 
+format long
 %normalize all
 columns=size(c,2);
 c=c/sqrt(columns);

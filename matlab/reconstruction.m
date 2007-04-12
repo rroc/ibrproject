@@ -1,5 +1,7 @@
 function c=reconstruction(c)
 
+format long
+
 rows=size(c,1);
 
 for row=1:rows
