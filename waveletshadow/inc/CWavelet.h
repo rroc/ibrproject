@@ -19,6 +19,9 @@ class CWavelet
 		void standardDeconstruction();
 		void standardReconstruction();
 		void print();
+
+		//void operator /(float aValue);
+		//void operator *(float aValue);
 		
 
 		//non-standard steps- with/without colors
