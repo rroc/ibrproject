@@ -5,7 +5,8 @@
 #include "CMeshLoader.h"
 #include "CObjLoader.h"
 #include <ctime>
-
+#include "CMatrixNoColors.h"
+#include "CWavelet.h"
 #ifdef USE_OPENMP
 #include <omp.h>
 #endif
@@ -405,13 +406,36 @@ void CMyRenderer::ChangeVertexMap()
 #ifndef USE_FP_TEXTURES
 	GLubyte* checkImage = new GLubyte[ KSamplingResolution*KSamplingResolution*4*6 ];
 	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+	CMatrixNoColors *matrix1= new CMatrixNoColors(data,KSamplingResolution,KSamplingResolution);
+	CWavelet *wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	float *data1=wavelet1->returnFloat();
+
+	delete matrix1;
+	delete wavelet1;
+
+	//float* data1 = reinterpret_cast<float*>(&wavelet1->iWaveletNoColors->iMatrix.at(0).at(0));
+
+	int first=KSamplingResolution*KSamplingResolution;
+
 	for (int i=0,endI=KSamplingResolution*KSamplingResolution*6;i<endI;i++)
 		{
-		int val = 0xFF * *(data+i);
-		*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
-		*(checkImage+i*4+1) = (GLubyte)val; //green
-		*(checkImage+i*4+2) = (GLubyte)val; //blue
-		*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+		if (i<first)
+			{
+			int val = 0xFF * *(data1+i);
+			*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+			*(checkImage+i*4+1) = (GLubyte)val; //green
+			*(checkImage+i*4+2) = (GLubyte)val; //blue
+			*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+			}
+		else
+			{
+			int val = 0xFF * *(data+i);
+			*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+			*(checkImage+i*4+1) = (GLubyte)val; //green
+			*(checkImage+i*4+2) = (GLubyte)val; //blue
+			*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+			}
 		}
 	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -438,6 +462,7 @@ void CMyRenderer::ChangeVertexMap()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*5 );
 
 	delete[] checkImage;
+	delete[] data1;
 #else
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
@@ -459,6 +484,103 @@ void CMyRenderer::ChangeVertexMap()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
 #endif
 	}
+
+
+void CMyRenderer::ChangeLightProbeMap()
+{   
+	int faceDimension=KSamplingResolution*KSamplingResolution;
+	printf("\n\n\nLight probe is getting compressed in wavelet basis");
+	// roof 
+	CMatrix *RoofLightProbe= new CMatrix(iLightProbe, KSamplingResolution, KSamplingResolution);	
+	CWavelet *RoofWavelet=new CWavelet(RoofLightProbe,KSamplingResolution,KSamplingResolution);
+	
+	//left 
+	CMatrix *LeftLightProbe=new CMatrix(iLightProbe+faceDimension,KSamplingResolution, KSamplingResolution);
+	CWavelet *LeftWavelet=new CWavelet(LeftLightProbe,KSamplingResolution,KSamplingResolution);
+	//front 
+	CMatrix *FrontLightProbe=new CMatrix(iLightProbe+2*faceDimension,KSamplingResolution, KSamplingResolution);
+	CWavelet *FrontWavelet=new CWavelet(FrontLightProbe,KSamplingResolution,KSamplingResolution);
+	//right 
+	CMatrix *RightLightProbe=new CMatrix(iLightProbe+3*faceDimension,KSamplingResolution, KSamplingResolution);
+	CWavelet *RightWavelet=new CWavelet(RightLightProbe,KSamplingResolution,KSamplingResolution);
+	//floor 
+	CMatrix *FloorLightProbe=new CMatrix(iLightProbe+4*faceDimension,KSamplingResolution, KSamplingResolution);
+	CWavelet *FloorWavelet=new CWavelet(FloorLightProbe,KSamplingResolution,KSamplingResolution);
+	//back
+	CMatrix *BackLightProbe=new CMatrix(iLightProbe+5*faceDimension,KSamplingResolution, KSamplingResolution);
+	CWavelet *BackWavelet=new CWavelet(BackLightProbe,KSamplingResolution,KSamplingResolution);
+
+	//wavelet compression of all the faces of the cubemap Lightprobe
+	RoofWavelet->nonStandardDeconstruction();
+	LeftWavelet->nonStandardDeconstruction();
+	FrontWavelet->nonStandardDeconstruction();
+	RightWavelet->nonStandardDeconstruction();
+	FloorWavelet->nonStandardDeconstruction();
+	BackWavelet->nonStandardDeconstruction();
+	printf("\n\n\n lightprobe faces' wavelets generated");
+	
+	
+	float *f0=RoofWavelet->returnScaledFloat();
+	float *f1=LeftWavelet->returnScaledFloat();
+	float *f2=FrontWavelet->returnScaledFloat();
+	float *f3=RightWavelet->returnScaledFloat();
+	float *f4=FloorWavelet->returnScaledFloat();
+	float *f5=BackWavelet->returnScaledFloat();
+	
+
+	delete RoofLightProbe;
+	delete RoofWavelet;
+	delete LeftLightProbe;
+	delete LeftWavelet;
+	delete FrontLightProbe;
+	delete FrontWavelet;
+	delete RightLightProbe;
+	delete RightWavelet;
+	delete FloorLightProbe;
+	delete FloorWavelet;
+	delete BackLightProbe;
+	delete BackWavelet;
+
+	
+	/*printf("\n\nwavelet compressed roof lightprobe\n");
+	RoofWavelet->print();
+	printf("\n\n");*/
+
+
+	//roof
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f0 );
+	//left
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f1 );
+	//front
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f2 );
+	//right
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f3 );
+	//floor
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f4 );
+	//back
+	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f5 );
+
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(data->iX)) );
+
+
+	delete []f0;
+	delete []f1;
+	delete []f2;
+	delete []f3;
+	delete []f4;
+	delete []f5;
+
+
+
+}
+
+
 
 
 // *************	RENDERING METHODS *********** /
@@ -507,6 +629,7 @@ void CMyRenderer::RenderScene()
 	glDisable(GL_BLEND);
 
 	DrawMap();
+	ChangeLightProbeMap();
  	DrawProbe();
 
 	ShowFPS();

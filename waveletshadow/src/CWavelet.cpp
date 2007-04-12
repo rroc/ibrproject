@@ -122,7 +122,7 @@ void CWavelet::nonStandardDeconstruction()
 		//iWavelet->print();
 
 
-		while (g>=2)
+		while (g>=16)
 		{
 			for(int row=0;row<g; row++)
 			{
@@ -349,11 +349,23 @@ void CWavelet::standardReconstruction()
 	recomposed=true;
 }
 
+float* CWavelet::returnScaledFloat()
+{
+	if(withColors)
+	{
+		return iWavelet->returnScaledFloat();
+	}
+	else return NULL;
+	/*
+	else
+		return iWaveletNoColors->returnScaledFloat();*/
+}
+
+
 float* CWavelet::returnFloat()
 {
 	if(withColors)
 	{
-		printf("\n\nWavelet with colors cannot return float *, it is not yet implemented. \n\n");
 		return iWavelet->returnFloat();
 	}
 	else
