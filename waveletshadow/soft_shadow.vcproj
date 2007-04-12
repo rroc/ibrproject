@@ -52,6 +52,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="glut32.lib glew32.lib glu32.lib opengl32.lib kernel32.lib"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -121,6 +122,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="glut32.lib glew32.lib glu32.lib opengl32.lib kernel32.lib"
 				LinkTimeCodeGeneration="1"
 			/>
 			<Tool
