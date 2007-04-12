@@ -105,15 +105,30 @@ CMatrix * CMatrix::transpose()
 
 CMatrix* CMatrix::crop(int aRow1,int aRow2,int aCol1, int aCol2 )
 {
+
 	int newR=aRow2-aRow1;
 	int newC=aCol2-aCol1;
 	CMatrix *cropped=new CMatrix(newR, newC);
-	for(int rows=0, rows1=aRow1; rows<newR, rows1<aRow2; rows++,rows1++)
-		for(int cols=0, cols1=aCol1; cols<newC, cols1<aCol2; cols++,cols1++)
+	for (int i=0,endI=newR; i<endI; i++)
+	{
+		for (int j=0, endJ=newC; j<endJ; j++)
 		{
-			cropped->iMatrix.at(rows).at(cols)=iMatrix.at(rows1).at(cols1);
+			//printf("\n rows=%d, cols=%d, rows1= %d, cols1= %d",i,j,aRow1+i,aCol1+j);
+			cropped->iMatrix.at(i).at(j) = iMatrix.at(aRow1+i).at(aCol1+j);
 		}
+	}
+
 	return cropped;
+
+	//int newR=aRow2-aRow1;
+	//int newC=aCol2-aCol1;
+	//CMatrix *cropped=new CMatrix(newR, newC);
+	//for(int rows=0, rows1=aRow1; rows<newR, rows1<aRow2; rows++,rows1++)
+	//	for(int cols=0, cols1=aCol1; cols<newC, cols1<aCol2; cols++,cols1++)
+	//	{
+	//		cropped->iMatrix.at(rows).at(cols)=iMatrix.at(rows1).at(cols1);
+	//	}
+	//	return cropped;
 }
 
 void CMatrix::substitute(CMatrix *aMatrix, int aRow1, int aRow2, int aCol1, int aCol2)
@@ -146,7 +161,7 @@ void CMatrix::operator /(float a)
 
 void CMatrix::operator *(float a)
 {
-	
+
 	for(int rows=0;rows<iRows; rows++)
 	{
 		for(int cols=0; cols<iCols; cols++)
@@ -174,7 +189,16 @@ void CMatrix::print()
 
 float* CMatrix::returnFloat()
 {
-	printf("\nfloat* CMatrix::returnFloat() is not yet implemented");
-	float *p=NULL;
+	float *p=new float[iRows*iCols*3];
+	for (int rows=0;rows<iRows;rows++)
+	{
+		for (int cols=0; cols<iCols;cols++)
+		{
+			( *(p+rows*iCols*3+cols*3) )  = iMatrix.at(rows).at(cols).iX;
+			( *(p+rows*iCols*3+cols*3+1) )= iMatrix.at(rows).at(cols).iY;
+			( *(p+rows*iCols*3+cols*3+2) )= iMatrix.at(rows).at(cols).iZ;
+		}
+	}
+
 	return p;
 }

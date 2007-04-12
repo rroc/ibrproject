@@ -38,14 +38,20 @@ CMatrix* CWavelet::nonStandardDeconstructionStep(CMatrix *aMatrix)
 {
 	CMatrix *temp= new CMatrix(aMatrix->iRows,aMatrix->iCols);
 	int limit=aMatrix->iCols/2;
+	//printf("\nlimit=%d, iCols=%d",limit,aMatrix->iCols);
 
+	//printf("\n decomposing the cropped.....\n result is \n");
 	for(int i=0; i<limit;i++)
 	{
-		temp->iMatrix.at(1).at(i)       = ( aMatrix->iMatrix.at(1).at(2*i-1) + aMatrix->iMatrix.at(1).at(2*i) ) / (sqrt(2.0));
-		temp->iMatrix.at(1).at(limit+i) = ( aMatrix->iMatrix.at(1).at(2*i-1) - aMatrix->iMatrix.at(1).at(2*i) ) / (sqrt(2.0));
+		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
+		temp->iMatrix.at(0).at(limit+i) = ( aMatrix->iMatrix.at(0).at(2*i) - aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
 	}
 	aMatrix->~CMatrix();
 
+
+
+	/*temp->print();
+	printf("\n.............decomposed!");*/
 	return temp;
 }
 CMatrix* CWavelet::nonStandardReconstructionStep(CMatrix *aMatrix)
