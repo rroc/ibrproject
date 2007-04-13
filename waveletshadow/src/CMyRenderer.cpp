@@ -38,9 +38,13 @@ CMyRenderer::CMyRenderer( const int aWidth, const int aHeight )
 , iTimebase(0)
 , iLightingModelName("shadowed")
 , iRotationAnimation( 0, 0, 0)
+, iRotationAngle(0)
+, iRotationAxis(0,0,0)
 , iCubeMapVertex(0)
 , iWireFrame(GL_TRIANGLES)
 , iVisualDecomposition( false )
+, iRotationFinished( false )
+, iScale(1.0f)
 	{
 	InitMain();
 	}
@@ -97,12 +101,19 @@ void CMyRenderer::InitMain()
 	omp_set_num_threads( 3 );
 #endif
 
+	//Prepare the navigation xform
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *) &iRotationXForm );
+
 	glMatrixMode( GL_VIEWPORT );
 	glViewport(0, 0, (GLsizei)iScreenWidth, (GLsizei)iScreenHeight);
+		
 	glMatrixMode(GL_PROJECTION);
-
 	glLoadIdentity();
-	glOrtho( -1, 1, -1, 1, 0.01, 1000 );
+	gluPerspective(45, (GLdouble)iScreenWidth/(GLdouble)iScreenHeight, 0.001, 10);
+
+//	glOrtho( -1, 1, -1, 1, 0.01, 1000 );
 
 	glMatrixMode(GL_MODELVIEW);
 
@@ -669,13 +680,28 @@ void CMyRenderer::DecomposeLightProbeMap()
 
 void CMyRenderer::RenderScene()
 	{
-	if( abs(iRotationAnimation.iX) > 0.01 || abs(iRotationAnimation.iY) > 0.05 )
+	if( iRotationFinished )
 		{
-		iRotationAnimation.iX *= 0.7;//0.3;
-		iRotationAnimation.iY *= 0.9;
+		iRotationAngleChange *= 0.9f;
+		
+		//iRotationAxis.iY *= 1.2f;
+		//iRotationAxis.iX *= 0.8f;
+		//iRotationAxis.iZ *= 0.8f;
+		//iRotationAxis = iRotationAxis.normalize();
+		iRotationAngle += iRotationAngleChange;
+
+		if( iRotationAngleChange < 0.2f  )
+			{
+			ApplyRotations();
+
+			//clear
+			iRotationAngle = 0.0f;
+			iRotationAxis.set(0,0,0);
+			iRotationFinished = false;
+			}
 		}
-	iSceneRotation->iAngles.iX += iRotationAnimation.iX;
-	iSceneRotation->iAngles.iY += iRotationAnimation.iY;
+	//iSceneRotation->iAngles.iX += iRotationAnimation.iX;
+	//iSceneRotation->iAngles.iY += iRotationAnimation.iY;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -683,13 +709,21 @@ void CMyRenderer::RenderScene()
 
 
 	glTranslatef( 0, 0, -4.0 );
-	glRotatef( iSceneRotation->iAngles.iX, 1,0,0 );
-	glRotatef( iSceneRotation->iAngles.iY, 0,1,0 );
-	//	glRotatef( iSceneRotation->iAngles.iZ, 0,0,1 );
 
+	glMultMatrixf( (GLfloat*) iRotationXForm );
+
+	//glRotatef( iSceneRotation->iAngles.iX, 1,0,0 );
+	//glRotatef( iSceneRotation->iAngles.iY, 0,1,0 );
+	glRotatef( iRotationAngle, iRotationAxis.iX, iRotationAxis.iY, iRotationAxis.iZ);
+
+	//glRotatef( iSceneRotation->iAngles.iZ, 0,0,1 );
 
 	glPushMatrix();
+
 	DrawCubemap();
+
+	glScalef( iScale, iScale, iScale );
+
 	//DrawScene
 	for(int i=0, endi=iSceneGraph.size(); i<endi; i++)
 		{
@@ -1265,7 +1299,7 @@ void CMyRenderer::DrawCubemap()
 	//glDisable(GL_LIGHTING );
 
 	//USING MULTIPLE TEXTURES
-	const float size(3.5f);
+	float size(3.5f * iScale);
 	const float maxEps(0.999);
 	const float minEps(0.001);
 
@@ -1756,7 +1790,37 @@ void CMyRenderer::ShowFPS()
 	glPopMatrix();
 	}
 
+void CMyRenderer::RotatingFinished( float aSpeed )
+	{
+	iRotationFinished = true;
+	iRotationAngleChange = aSpeed * 7.0f;
+	
+	ApplyRotations();
+	iRotationAngle = 0.0f;
+	}
 
+void CMyRenderer::ApplyRotations()
+	{
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glLoadMatrixf( (GLfloat *) &iRotationXForm );
+	glRotatef( iRotationAngle, iRotationAxis.iX, iRotationAxis.iY, iRotationAxis.iZ );
+	glGetFloatv( GL_MODELVIEW_MATRIX, (GLfloat *) &iRotationXForm );
+	}
+
+void CMyRenderer::RotatingStarted()
+	{
+	if(iRotationFinished)
+		{
+		iRotationFinished = false;
+		iRotationAngleChange = 0.0f;
+
+		ApplyRotations();
+		iRotationAngle = 0.0f;
+		iRotationAxis.set(0,0,0);
+		}
+	}
 //EXTERNAL FUNCTIONS TO USE GLUT CALLBACKS
 //-----------------------------------------------------
 void RenderSceneWithRenderer()

@@ -22,10 +22,12 @@ class CMyUiEvents
 		~CMyUiEvents();
 
 		//MEMBER FUNCTIONS
-		void ProcessNormalKeys( unsigned char key, int x, int y );
-		void ProcessCursorKeys( int key, int x, int y );
-		void ProcessMouseEvent( int button, int state, int x, int y );
-		void ProcessMouseMotionEvent( int x, int y );
+		void ProcessNormalKeys( unsigned char key, TVector3 aPoint );
+		void ProcessCursorKeys( int key, TVector3 aPoint );
+		void ProcessMouseEvent( int button, int state, TVector3 aPoint );
+		void ProcessMouseMotionEvent( TVector3 aPoint );
+
+		TVector3 trackBall( TVector3 aPoint );
 
 	//PUBLIC DATA
 	public:
@@ -43,8 +45,16 @@ class CMyUiEvents
 
 		CMyRenderer* iRenderer;
 		TMouseDownStatus iMouseButtonDown;
-		int iMouseX;
-		int iMouseY;
+		
+		TVector3 iPreviousRotationPoint;
+		TVector3 iCurrentRotationPoint;
+
+		TVector3 iPreviousZoomPoint;
+		TVector3 iCurrentZoomPoint;
+
+		TVector3 iScreenSize;
+
+		float iSpeed;
 	};
 
 extern void ProcessNormalKeysWithUi( unsigned char key, int x, int y );
