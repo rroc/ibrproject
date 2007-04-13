@@ -87,6 +87,9 @@ class CMyRenderer
 		void ActivateDecomposition();
 		void ActivateReconstruction();
 
+		void RotatingStarted();
+		void RotatingFinished( float aSpeed );
+
 	//PRIVATE FUNCTIONS
 	//------------------
 	private:
@@ -100,6 +103,7 @@ class CMyRenderer
 		void CreateScene();
 		void LoadTextures();
 
+		void ApplyRotations();
 
 		void RenderObject(CMesh* aMesh);
 		void DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3]);
@@ -145,12 +149,21 @@ class CMyRenderer
 		CSceneRotation* iSceneRotation;
 		TVector3 iRotationAnimation;
 
+		TVector3	iRotationAxis;
+		float		iRotationAngle;
+		float		iRotationAngleChange;
+
 		GLenum iWireFrame;
 
+		float iScale;
 
 	//PRIVATE DATA
 	//------------------
 	private:
+		bool iRotationFinished;
+
+		float iRotationXForm[16];
+
 		int iScreenHeight;	//< The height of the screen
 		int iScreenWidth;	//< The width of the screen
 

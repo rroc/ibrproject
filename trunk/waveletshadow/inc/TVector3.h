@@ -125,7 +125,7 @@ TVector3 TVector3::normalize() const
 *       \param _v1 the vector that this should be crossed with
 *       \return The result as a TVector3
 *
-*       | i  j  k  |
+*   | i  j  k  |
 *   | aX aY aZ | = (aY*bZ - aZ*bY)i - (aX*bZ - aZ*bX)j + (aX*bY - aY*bX)k
 *   | bX bY bZ |
 */
@@ -134,7 +134,7 @@ TVector3 TVector3::cross(const TVector3& _v1) const
 	{
 	return TVector3
 		(
-		this->iY * _v1.iZ  -  this->iZ * _v1.iY        //X
+		 this->iY * _v1.iZ  -  this->iZ * _v1.iY        //X
 		,this->iZ * _v1.iX  -  this->iX * _v1.iZ        //Y
 		,this->iX * _v1.iY  -  this->iY * _v1.iX        //Z
 		);
@@ -152,7 +152,7 @@ TVector3 TVector3::cross(const TVector3& _v1, const TVector3& _v2) const
 	// (i x j) =k; (j x k) =i;  (k x i) =j;
 	// AxB = (Ay*Bz-Az*By)i + (Az*Bx-Ax*Bz)j + (Ax*By-Ay*Bx)k
 	return  TVector3(
-		_v1.iY * _v2.iZ  -  _v1.iZ * _v2.iY   //(Ay*Bz-Az*By)i = X
+		  _v1.iY * _v2.iZ  -  _v1.iZ * _v2.iY   //(Ay*Bz-Az*By)i = X
 		, _v1.iZ * _v2.iX  -  _v1.iX * _v2.iZ   //(Az*Bx-Ax*Bz)j= Y
 		, _v1.iX * _v2.iY  -  _v1.iY * _v2.iX   //(Ax*By-Ay*Bx)k= Z
 		);

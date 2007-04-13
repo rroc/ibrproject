@@ -14,8 +14,13 @@ CMyUiEvents* CMyUiEvents::iCurrentUi = 0;
 
 //Constructor, saves a pointer to the renderer
 CMyUiEvents::CMyUiEvents( CMyRenderer* aRenderer )
+	: iRenderer( aRenderer )
+	, iScreenSize( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT), 0)
+	, iPreviousRotationPoint(0,0,0)
+	, iPreviousZoomPoint(0,0,0)
+	, iCurrentRotationPoint(0,0,0)
+	, iCurrentZoomPoint(0,0,0)
 	{
-	iRenderer = aRenderer;
 	}
 
 //Destructor
@@ -24,8 +29,8 @@ CMyUiEvents::~CMyUiEvents()
 	}
 
 //Used to handle the keyboard input (ASCII Characters)
-void CMyUiEvents::ProcessNormalKeys(unsigned char key, int x, int y)
-	{
+void CMyUiEvents::ProcessNormalKeys(  unsigned char key, TVector3 aPoint  )
+{
     switch (key)
 		{
 		//ESC
@@ -34,8 +39,8 @@ void CMyUiEvents::ProcessNormalKeys(unsigned char key, int x, int y)
 			break;
 		//SPACE
 		case 32 :
-			iRenderer->iRotationAnimation.iX = 0;
-			iRenderer->iRotationAnimation.iY = 0;
+			iRenderer->RotatingStarted();
+			iRenderer->RotatingFinished(0.0);
 			break;
 		//ENTER
 		case 13:
@@ -67,45 +72,42 @@ void CMyUiEvents::ProcessNormalKeys(unsigned char key, int x, int y)
 	}
 
 // Used to handle the keyboard input (not ASCII Characters)
-void CMyUiEvents::ProcessCursorKeys(int key, int x, int y)
-	{
+void CMyUiEvents::ProcessCursorKeys(  int key, TVector3 aPoint  )
+{
 	}
 
-void CMyUiEvents::ProcessMouseEvent( int button, int state, int x, int y )
-	{
+void CMyUiEvents::ProcessMouseEvent(  int button, int state, TVector3 aPoint  )
+{
 	switch (button)
 		{
-		//Set point of rotation
 		case GLUT_LEFT_BUTTON:
-//			printf("LEFT\n");
 			if(GLUT_DOWN == state)
 				{
 				iMouseButtonDown = EMouseDownLeft;
-				iMouseY = y;
-				iMouseX = x;
+				iRenderer->RotatingStarted();
+				iPreviousRotationPoint = trackBall( aPoint );
 				}
 			else
 				{
-				iRenderer->iRotationAnimation.iX += ( (iMouseY-y) * KAngleChangeAmount );
-				iRenderer->iRotationAnimation.iY += ( (iMouseX-x) * KAngleChangeAmount );
-				iMouseY = y;
-				iMouseX = x;
 				iMouseButtonDown = EMouseUpLeft;
+				if( iSpeed > 0.0001 ) // If little movement - do nothing.
+					{
+					//iMousePoint = trackBall( aPoint );
+					//iSpeed = ( 0.000000001 < ( iCurrentPoint - iMousePoint ).length())? iSpeed: 0.0;
+
+					iRenderer->RotatingFinished( iSpeed );
+					}
 				}
 			break;
-		//Set mesh position
+
 		case GLUT_RIGHT_BUTTON:
-//			printf("RIGHT\n");
 			if(GLUT_DOWN == state)
 				{
-//				printf("DOWN\n");
 				iMouseButtonDown = EMouseDownRight;
-				iMouseY = y;
-				iMouseX = x;
+				iPreviousZoomPoint = aPoint;
 				}
 			else
 				{
-//				printf("UP\n");
 				iMouseButtonDown = EMouseUpRight;
 				}
 			break;
@@ -115,30 +117,64 @@ void CMyUiEvents::ProcessMouseEvent( int button, int state, int x, int y )
 
 	}
 
-void CMyUiEvents::ProcessMouseMotionEvent( int x, int y )
-	{
-/*
-//	printf("MouseMoving: %d\n", iMouseButtonDown);
+void CMyUiEvents::ProcessMouseMotionEvent(  TVector3 aPoint  )
+{
 	if( EMouseDownLeft == iMouseButtonDown)
 			{
-//			printf("LeftB\n");
-			iRenderer->iRotationAnimation.iX += ( (iMouseY-y) * KAngleChangeAmount*20 );
-			iRenderer->iRotationAnimation.iY += ( (iMouseX-x) * KAngleChangeAmount );
-			iMouseY = y;
-			iMouseX = x;
+			iCurrentRotationPoint = trackBall( aPoint );
+
+			TVector3 direction = iCurrentRotationPoint - iPreviousRotationPoint;
+			iSpeed = direction.length();
+			if( iSpeed > 0.0001 ) // If little movement - do nothing.
+				{
+				iRenderer->iRotationAxis  = iPreviousRotationPoint.cross( iCurrentRotationPoint );
+				iRenderer->iRotationAngle = iSpeed * 50.0f;
+
+				iRenderer->iRotationAxis = iRenderer->iRotationAxis.normalize();
+				}
 			}
 	else if( EMouseDownRight == iMouseButtonDown)
 			{
-//			printf("RightB\n");
-			iRenderer->RotateLights( (iMouseX-x)*KLightChangeAmount, (iMouseY-y)*KLightChangeAmount );
-			iMouseY = y;
-			iMouseX = x;
+			int diff = aPoint.iY - iPreviousZoomPoint.iY;
+			float zoomFactor = diff * 0.01f;
+			float sum = iRenderer->iScale + zoomFactor;
+
+			//printf("%f -> %f\n", zoomFactor, iRenderer->iScale);
+
+			//check range
+			if(sum<0.6f)
+				{
+				iRenderer->iScale = 0.6f;
+				}
+			else if(sum>2.5f)
+				{
+				iRenderer->iScale = 2.5f;
+				}
+			else
+				{
+				iRenderer->iScale = sum;
+				}
+			iPreviousZoomPoint = aPoint;
 			}
-*/
+
 	}
 
+TVector3 CMyUiEvents::trackBall( TVector3 aPoint )
+	{
+	TVector3 trackBallPoint( 
+				  ( 2.0f*aPoint.iX - iScreenSize.iX ) / iScreenSize.iX
+				, ( 2.0f*aPoint.iY - iScreenSize.iY ) / iScreenSize.iY
+				, 0.0
+				);
 
+	float d = trackBallPoint.length();
+	d = (d<1.0f)? d : 1.0f;
+	trackBallPoint.iZ = sqrtf(1.001f - d*d);
 
+	//needs to be normalized (only d was clipped)
+	trackBallPoint.normalize(); 
+	return trackBallPoint;
+	}
 
 
 
@@ -146,23 +182,23 @@ void CMyUiEvents::ProcessMouseMotionEvent( int x, int y )
 void ProcessNormalKeysWithUi( unsigned char key, int x, int y )
 	{
 	if (CMyUiEvents::iCurrentUi != 0 )
-		CMyUiEvents::iCurrentUi->ProcessNormalKeys( key, x, y  );
+		CMyUiEvents::iCurrentUi->ProcessNormalKeys( key, TVector3(x, y, 0)  );
 	}
 
 void ProcessCursorKeysWithUi( int key, int x, int y )
 	{
 	if (CMyUiEvents::iCurrentUi != 0 )
-		CMyUiEvents::iCurrentUi->ProcessCursorKeys( key, x, y );
+		CMyUiEvents::iCurrentUi->ProcessCursorKeys( key, TVector3(x, y, 0) );
 	}
 void ProcessMouseEventWithUi( int button, int state, int x, int y)
 	{
 	if (CMyUiEvents::iCurrentUi != 0 )
-		CMyUiEvents::iCurrentUi->ProcessMouseEvent( button, state, x, y );
+		CMyUiEvents::iCurrentUi->ProcessMouseEvent( button, state, TVector3(x, y, 0) );
 	}
 
 void ProcessMouseMotionEventWithUi( int x, int y )
 	{
 	if (CMyUiEvents::iCurrentUi != 0 )
-		CMyUiEvents::iCurrentUi->ProcessMouseMotionEvent( x, y );
+		CMyUiEvents::iCurrentUi->ProcessMouseMotionEvent( TVector3(x, y, 0) );
 	}
 
