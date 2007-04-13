@@ -122,7 +122,7 @@ void CWavelet::nonStandardDeconstruction()
 		//iWavelet->print();
 
 
-		while (g>=16)
+		while (g>=17)
 		{
 			for(int row=0;row<g; row++)
 			{
@@ -376,7 +376,7 @@ float* CWavelet::returnFloat()
 //Pre-compute the sums for product calculation
 float CWavelet::ComputeParentSum( CWavelet aF, TSquare aS)
 {
-	THashTable::iterator it = iParentSum.find( aS );
+	TSquareHashTable::iterator it = iParentSum.find( aS );
 
 	//item already exists
 	if( it != iParentSum.end( ) )
@@ -441,7 +441,7 @@ void CWavelet::ComputeChildrenSums( CWavelet aG, CWavelet aH )
 						//sum all the levels
 						while( s.l >= 0 )
 						{
-							THashTable::iterator it = iChildSum.find( s );
+							TSquareHashTable::iterator it = iChildSum.find( s );
 
 							//exists already
 							if( it != iChildSum.end( ) )

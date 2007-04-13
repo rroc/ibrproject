@@ -17,6 +17,8 @@
 
 //CONSTANTS
 static const int KSamplingResolution(32); // this is used as the cubemap resolution ie. (64x64x6)
+static const int KSamplingFaceCoefficients( KSamplingResolution*KSamplingResolution );
+static const int KSamplingTotalCoefficients( KSamplingResolution*KSamplingResolution*6 );
 
 //CLASS DECLARATION
 
@@ -118,9 +120,13 @@ class CMyRenderer
 		
 		void PrecomputedRadianceTransfer();
 		void PreCalculateDirectLight();
-		bool ValidPRTDataExists();
+		bool ValidPRTDataExists(string filename);
+		
 		void LoadPRTData();
+		void LoadPRTHashData();
+
 		void SavePRTData();
+		void SavePRTHashData();
 
 		void TransformMesh( CMesh* aMesh );
 		void MultMatrixVect(const double aMatrix[16], TVector3* aVector);

@@ -16,11 +16,13 @@ CMyRenderer* CMyRenderer::iCurrentRenderer = 0;
 
 static const float KEpsilon( 0.0001 );
 
-static const float	KObjectScale = 0.2f;
-static const string KObjectName = "monster"; //"testscene" (1.0); "monster" (0.2); "gt16k" (0.0045); //"simple4" (0.0045);
+static const float	KObjectScale = 0.0045f;
+static const string KObjectName = "simple4"; //"testscene" (1.0); "monster" (0.2); "gt16k" (0.0045); //"simple4" (0.0045);
 static const string KObjectFileName = KObjectName+".obj";
 
-static const string KDataFileName	= KObjectName + "_coefficients.bin";
+static const string KDataFileName	  = KObjectName + "_coefficients.bin";
+static const string KHashDataFileName = KObjectName + "_hash_coefficients.bin";
+
 static const float KLightVectorSize( 3.0 );
 
 
@@ -114,8 +116,9 @@ void CMyRenderer::InitMain()
 	PrecomputedRadianceTransfer();
 
 	InitVertexMap();
-
 	InitHashTables();
+
+//	SavePRTHashData();
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
@@ -364,6 +367,7 @@ void CMyRenderer::InitVertexMap()
 	iTextures.push_back( iProbeMapTextures[5] );
 	}
 
+
 void CMyRenderer::InitHashTables()
 	{
 	const int numberOfCoefficients = KSamplingResolution*KSamplingResolution*6;
@@ -380,8 +384,8 @@ void CMyRenderer::InitHashTables()
 				//store the non-empty
 				if( 0.0f != value )
 					{
-					TSquare key( 0, 0, coefficient );
-					iSceneGraph.at(object)->iVisibilityHash.at(vertex).insert( make_pair(key, value) );
+					//TSquare key( 0, 0, coefficient );
+					iSceneGraph.at(object)->iVisibilityHash.at(vertex).insert( make_pair(coefficient, value) );
 					}
 				//else
 				//	{
@@ -460,7 +464,7 @@ void CMyRenderer::ChangeVertexMap()
 
 	if( iVisualDecomposition )
 		{
-		float* data;
+		float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
 		data = DecomposeVisibility();
 
 		//roof
@@ -558,18 +562,22 @@ float* CMyRenderer::DecomposeVisibility()
 	delete wavelet1;
 
 
-	//int index(0);
+	int index(0);
 	totaldata=new float[res2*6];
 	float *ptr=totaldata;
 	for (int i=0;i<6;i++)
 		{
 		for (int j=0;j<res2;j++)
 			{
-			*(totaldata++)=*(FaceData[i]+j);
-			//index++;
+#ifdef USE_FP_TEXTURES
+			*(FaceData[i]+j) *= 150.0f;
+#endif
+			*(totaldata++) = *(FaceData[i]+j);
+			index++;
 			}
 		}
-	//printf("Copied %d values.\n", index);
+	printf("Copied %d values. [first:%f, last:%f]\n", index, *ptr, *(ptr+(index-1)) ) ;
+
 	delete[] FaceData[0];
 	delete[] FaceData[1];
 	delete[] FaceData[2];
@@ -774,8 +782,8 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 		float visibility;
 		aMesh->iVertexColors.resize(vertCount);
 
-		THashTable::iterator it;		
-		THashTable::iterator itEnd;		
+		TIntHashTable::iterator it;		
+		TIntHashTable::iterator itEnd;		
 		//THashTable::iterator probeIt;
 		int index(0);
 
@@ -792,7 +800,7 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 
 			while( it != itEnd )
 				{
-				index = it->first.y;
+				index = it->first;
 				color.iR += it->second * (iLightProbe+index)->iX;
 				color.iG += it->second * (iLightProbe+index)->iY;
 				color.iB += it->second * (iLightProbe+index)->iZ;				
@@ -847,16 +855,31 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 	{
 	printf("\nPrecomputed Radiance Transfer...\n");
 
-	if ( ValidPRTDataExists() )
+	if ( ValidPRTDataExists( KHashDataFileName ) )
+		{
+		LoadPRTHashData();
+		return;
+		} 
+	//OLD DATA TYPE TO NEW ONE
+	else if ( ValidPRTDataExists( KDataFileName ) )
 		{
 		LoadPRTData();
+
+		printf("CONVERTING TO NEW FORMAT...\n");
+		printf("---------------------------\n");
+		InitVertexMap();
+		InitHashTables();
+		SavePRTHashData();
+		printf("You can now start with the new data\n");
+		exit(-1);
 		return;
 		} 
 	else
 		{
 		PreCalculateDirectLight();
-		SavePRTData();
-
+		//SavePRTData();
+		SavePRTHashData();
+		
 		//iTextures.push_back( 
 		//				CreateTexture( 
 		//					  reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) )
@@ -869,9 +892,9 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 		}
 	}
 
-bool CMyRenderer::ValidPRTDataExists()
+bool CMyRenderer::ValidPRTDataExists( string filename )
 	{
-	std::ifstream infile( KDataFileName.c_str(), std::ios::in | std::ios::binary);
+	std::ifstream infile( filename.c_str(), std::ios::in | std::ios::binary);
 	if(!infile.is_open())
 		{
 		return false;
@@ -976,6 +999,119 @@ void CMyRenderer::SavePRTData()
 		}
 	outFile.close();
 	printf("\nSaving OK.\n");
+	}
+
+void CMyRenderer::SavePRTHashData()
+	{
+	printf("Saving PRT Hash Data to a file(\"%s\").\n", KHashDataFileName.c_str() );
+	std::ofstream outFile( KHashDataFileName.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+
+	//Create header
+	int numOfSamples( KSamplingResolution*KSamplingResolution*6 );
+	int numOfTotalVertices( iVerticesInScene );
+	outFile.write((const char *)&numOfSamples, sizeof(int));
+	outFile.write((const char *)&numOfTotalVertices, sizeof(int));
+
+	printf(" - Samples/Vertices/Objects: %d/%d/%d\n", numOfSamples, numOfTotalVertices, iSceneGraph.size() );
+
+	//for all the objects in the scene...
+	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
+		{
+		//		printf(" O: %d\n", i );
+		CMesh* currentMesh = iSceneGraph.at( i );
+		int numVertices=currentMesh->iVertices.size();
+
+		TIntHashTable::iterator it;		
+		TIntHashTable::iterator itEnd;		
+		int index(0);
+
+		//...and for all the vertices in objects...
+		for(int j=0; j<numVertices; ++j)
+			{
+
+			//1. Write the number of elements in a hash table for the vertex
+			int size=currentMesh->iVisibilityHash.at(j).size();
+			outFile.write( (char *)&size, sizeof(int));
+
+			//Browse through the hash
+			int index=0;
+			it		= currentMesh->iVisibilityHash.at(j).begin();
+			itEnd	= currentMesh->iVisibilityHash.at(j).end();
+			while( it != itEnd )
+				{
+				//write the "key"
+				outFile.write( (char *) &(it->first), sizeof(int));
+				//write the value
+				outFile.write( (char *) &(it->second), sizeof(float));
+				it++;
+				index++;
+				}
+			}
+		}
+	outFile.close();
+	printf("\nSaving HashData OK.\n");
+	}
+
+
+void CMyRenderer::LoadPRTHashData()
+	{
+	std::ifstream infile( KHashDataFileName.c_str(), std::ios::in | std::ios::binary);
+	if(!infile.is_open())
+		{
+		printf("File access error while loading: %d.\n", KHashDataFileName.c_str() );
+		exit(-1);
+		}
+
+	//read the header (again!)
+	int numOfSamples;
+	int numOfTotalVertices;
+	infile.read((char *)&numOfSamples,		sizeof(int));
+	infile.read((char *)&numOfTotalVertices,	sizeof(int));
+
+	printf("Loading from file (\"%s\")...\n", KHashDataFileName.c_str() );
+
+	int datasize(0);
+
+	//for all the objects in the scene...
+	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
+		{
+		CMesh* currentMesh = iSceneGraph.at( i );
+		int numvertices=currentMesh->iVertices.size();;
+		currentMesh->iVisibilityCoefficients.clear();
+		currentMesh->iVisibilityCoefficients.resize(numvertices);
+		currentMesh->iVisibilityHash.resize( numvertices );
+
+		int key(0);
+		float value(0);
+
+		//...and for all the vertices in objects...
+		for(int j=0; j<numvertices; ++j)
+			{
+			int amountOfHashValues(0);
+			infile.read((char *)&amountOfHashValues, sizeof(int));
+			//printf("Hash(%d) = %d\n", j, amountOfHashValues);
+
+			vector<float> vertexVisibilityCoefficients( KSamplingTotalCoefficients );
+
+			//load the visibility coefficients
+			for(int k=0;k<amountOfHashValues;k++)
+				{
+				infile.read((char *)&key, sizeof(int));
+				infile.read((char *)&value, sizeof(float));
+
+				//printf("[%d: %f]\n", key, value);
+
+				vertexVisibilityCoefficients.at(key) = value;
+				currentMesh->iVisibilityHash.at(j).insert( make_pair(key, value) );
+
+				datasize++;
+				}
+			currentMesh->iVisibilityCoefficients.at(j) = vertexVisibilityCoefficients;
+			}
+		}
+	infile.close();
+	printf("Loaded %d bytes from file OK.\n\n", datasize*(sizeof(float) + sizeof(int)));
+	return;
 	}
 
 
