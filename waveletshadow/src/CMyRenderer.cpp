@@ -38,6 +38,7 @@ CMyRenderer::CMyRenderer( const int aWidth, const int aHeight )
 , iRotationAnimation( 0, 0, 0)
 , iCubeMapVertex(0)
 , iWireFrame(GL_TRIANGLES)
+, iVisualDecomposition( false )
 	{
 	InitMain();
 	}
@@ -105,7 +106,7 @@ void CMyRenderer::InitMain()
 
 	//Construct the scenegraph
 	CreateScene();
-	
+
 	LoadTextures();
 
 	InitLights();
@@ -119,7 +120,7 @@ void CMyRenderer::InitMain()
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
 	//iLightVector *= KLightVectorSize; // for drawing the vector!
- 	}
+	}
 
 int CMyRenderer::InitializeSamplingData()
 	{
@@ -138,57 +139,57 @@ int CMyRenderer::InitializeSamplingData()
 					{
 					case 0: //roof
 						iSampleData.push_back( TVector3( 
-														   (u-0.5)*2.0f
-														,  1.0f
-														,  -(v-0.5)*-2.0f 
-														) 
-													);
+							(u-0.5)*2.0f
+							,  1.0f
+							,  -(v-0.5)*-2.0f 
+							) 
+							);
 						break;
 					case 1: //left
 						iSampleData.push_back( TVector3( 
-														  -1.0f
-														, -(v-0.5)*-2.0f
-														, (u-0.5)*-2.0f 
-														)
-													);
+							-1.0f
+							, -(v-0.5)*-2.0f
+							, (u-0.5)*-2.0f 
+							)
+							);
 						break;
 					case 2: //front 
 						iSampleData.push_back( TVector3( 
-														   (u-0.5)* 2.0f
-														,  -(v-0.5)*-2.0f
-														, -1.0f 
-														)
-													);
+							(u-0.5)* 2.0f
+							,  -(v-0.5)*-2.0f
+							, -1.0f 
+							)
+							);
 						break;
 					case 3: //right
 						iSampleData.push_back( TVector3( 
-														   1.0f
-														,  -(v-0.5)*-2.0f
-														,  (u-0.5)* 2.0f 
-														)
-													);
+							1.0f
+							,  -(v-0.5)*-2.0f
+							,  (u-0.5)* 2.0f 
+							)
+							);
 						break;
 					case 4: //floor
 						iSampleData.push_back( TVector3( 
-														   (u-0.5)*2.0f
-														, -1.0f
-														,  -(v-0.5)*2.0f 
-														)
-													);
+							(u-0.5)*2.0f
+							, -1.0f
+							,  -(v-0.5)*2.0f 
+							)
+							);
 						break;
 					case 5: //back
 						iSampleData.push_back( TVector3( 
-														  (u-0.5)*2.0f
-														, -(v-0.5)*2.0f
-														, 1.0f 
-														)
-													);
+							(u-0.5)*2.0f
+							, -(v-0.5)*2.0f
+							, 1.0f 
+							)
+							);
 						break;
 					default:
 						//no other options
 						break;
 					}
-//				printf("%d\t%f\t%f - [%f, %f, %f]\n", cube, u, v, iSampleData.back().iX, iSampleData.back().iY, iSampleData.back().iZ);
+				//				printf("%d\t%f\t%f - [%f, %f, %f]\n", cube, u, v, iSampleData.back().iX, iSampleData.back().iY, iSampleData.back().iZ);
 				index++;
 				}
 			}
@@ -386,10 +387,10 @@ void CMyRenderer::InitHashTables()
 				//	{
 				//	}
 				}
-//			printf("[%d: %d] = %d\n", object, vertex, iSceneGraph.at(object)->iVisibilityHash.at(vertex).size() );
-//			iSceneGraph.at(object)->iVisibilityCoefficients.at(vertex).clear();
+			//			printf("[%d: %d] = %d\n", object, vertex, iSceneGraph.at(object)->iVisibilityHash.at(vertex).size() );
+			//			iSceneGraph.at(object)->iVisibilityCoefficients.at(vertex).clear();
 			}
-//		iSceneGraph.at(object)->iVisibilityCoefficients.clear();
+		//		iSceneGraph.at(object)->iVisibilityCoefficients.clear();
 		}
 	}
 
@@ -405,16 +406,16 @@ void CMyRenderer::ChangeVertexMap()
 
 #ifndef USE_FP_TEXTURES
 	GLubyte* checkImage = new GLubyte[ KSamplingResolution*KSamplingResolution*4*6 ];
-	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
-	CMatrixNoColors *matrix1= new CMatrixNoColors(data,KSamplingResolution,KSamplingResolution);
-	CWavelet *wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	float *data1=wavelet1->returnFloat();
 
-	delete matrix1;
-	delete wavelet1;
-
-	//float* data1 = reinterpret_cast<float*>(&wavelet1->iWaveletNoColors->iMatrix.at(0).at(0));
+	float* data;
+	if( iVisualDecomposition )
+		{
+		data = DecomposeVisibility();
+		}
+	else
+		{
+		data = 	= reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+		}
 
 	int first=KSamplingResolution*KSamplingResolution;
 
@@ -422,7 +423,7 @@ void CMyRenderer::ChangeVertexMap()
 		{
 		if (i<first)
 			{
-			int val = 0xFF * *(data1+i);
+			int val = 0xFF * *(data+i);
 			*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
 			*(checkImage+i*4+1) = (GLubyte)val; //green
 			*(checkImage+i*4+2) = (GLubyte)val; //blue
@@ -462,38 +463,79 @@ void CMyRenderer::ChangeVertexMap()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*5 );
 
 	delete[] checkImage;
-	delete[] data1;
+	delete[] data;
 #else
-	//roof
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
-	//left
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
-	//front
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
-	//right
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
-	//floor
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
-	//back
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
+	if( iVisualDecomposition )
+		{
+		float* data;
+		data = DecomposeVisibility();
+
+		//roof
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[0] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, data );
+		//left
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[1] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, data+offSet );
+		//front
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[2] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, data+offSet*2 );
+		//right
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[3] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, data+offSet*3 );
+		//floor
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[4] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, data+offSet*4 );
+		//back
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[5] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, data+offSet*5 );
+
+		delete data;
+		}
+	else
+		{
+		//roof
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[0] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0        )) );
+		//left
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[1] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet  )) );
+		//front
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[2] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*2  )) );
+		//right
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[3] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*3  )) );
+		//floor
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[4] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*4  )) );
+		//back
+		glBindTexture( GL_TEXTURE_2D, iVertexMapTextures[5] );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, KSamplingResolution, KSamplingResolution, 1, GL_LUMINANCE, GL_FLOAT, reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(offSet*5  )) );
+		}
 #endif
 	}
 
+float* CMyRenderer::DecomposeVisibility()
+	{
+	GLubyte* checkImage = new GLubyte[ KSamplingResolution*KSamplingResolution*4*6 ];
+	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+	CMatrixNoColors *matrix1= new CMatrixNoColors(data,KSamplingResolution,KSamplingResolution);
+	CWavelet *wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	delete matrix1;
+	delete wavelet1;
 
-void CMyRenderer::ChangeLightProbeMap()
-{   
-	int faceDimension=KSamplingResolution*KSamplingResolution;
-	printf("\n\n\nLight probe is getting compressed in wavelet basis");
+	return wavelet1->returnFloat();
+	}
+
+void CMyRenderer::DecomposeLightProbeMap()
+	{   
+	const int faceDimension=KSamplingResolution*KSamplingResolution;
+	//printf("\n\n\nLight probe is getting compressed in wavelet basis");
 	// roof 
 	CMatrix *RoofLightProbe= new CMatrix(iLightProbe, KSamplingResolution, KSamplingResolution);	
 	CWavelet *RoofWavelet=new CWavelet(RoofLightProbe,KSamplingResolution,KSamplingResolution);
-	
+
 	//left 
 	CMatrix *LeftLightProbe=new CMatrix(iLightProbe+faceDimension,KSamplingResolution, KSamplingResolution);
 	CWavelet *LeftWavelet=new CWavelet(LeftLightProbe,KSamplingResolution,KSamplingResolution);
@@ -517,16 +559,14 @@ void CMyRenderer::ChangeLightProbeMap()
 	RightWavelet->nonStandardDeconstruction();
 	FloorWavelet->nonStandardDeconstruction();
 	BackWavelet->nonStandardDeconstruction();
-	printf("\n\n\n lightprobe faces' wavelets generated");
-	
-	
+	//printf("\n\n\n lightprobe faces' wavelets generated");	
+
 	float *f0=RoofWavelet->returnScaledFloat();
 	float *f1=LeftWavelet->returnScaledFloat();
 	float *f2=FrontWavelet->returnScaledFloat();
 	float *f3=RightWavelet->returnScaledFloat();
 	float *f4=FloorWavelet->returnScaledFloat();
 	float *f5=BackWavelet->returnScaledFloat();
-	
 
 	delete RoofLightProbe;
 	delete RoofWavelet;
@@ -541,44 +581,33 @@ void CMyRenderer::ChangeLightProbeMap()
 	delete BackLightProbe;
 	delete BackWavelet;
 
-	
-	/*printf("\n\nwavelet compressed roof lightprobe\n");
-	RoofWavelet->print();
-	printf("\n\n");*/
-
-
 	//roof
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
+	glBindTexture( GL_TEXTURE_2D, iProbeMapTextures[0] );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f0 );
 	//left
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[1]-1 ) );
+	glBindTexture( GL_TEXTURE_2D, iProbeMapTextures[1] );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f1 );
 	//front
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[2]-1 ) );
+	glBindTexture( GL_TEXTURE_2D, iProbeMapTextures[2] );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f2 );
 	//right
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[3]-1 ) );
+	glBindTexture( GL_TEXTURE_2D, iProbeMapTextures[3] );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f3 );
 	//floor
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[4]-1 ) );
+	glBindTexture( GL_TEXTURE_2D, iProbeMapTextures[4] );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f4 );
 	//back
-	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[5]-1 ) );
+	glBindTexture( GL_TEXTURE_2D, iProbeMapTextures[5] );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, f5 );
 
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(data->iX)) );
-
-
 	delete []f0;
 	delete []f1;
 	delete []f2;
 	delete []f3;
 	delete []f4;
 	delete []f5;
-
-
-
-}
+	}
 
 
 
@@ -601,13 +630,13 @@ void CMyRenderer::RenderScene()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	
+
 
 	glTranslatef( 0, 0, -4.0 );
 	glRotatef( iSceneRotation->iAngles.iX, 1,0,0 );
 	glRotatef( iSceneRotation->iAngles.iY, 0,1,0 );
 	//	glRotatef( iSceneRotation->iAngles.iZ, 0,0,1 );
-	
+
 
 	glPushMatrix();
 	DrawCubemap();
@@ -628,9 +657,12 @@ void CMyRenderer::RenderScene()
 	glDepthMask( GL_TRUE );
 	glDisable(GL_BLEND);
 
+	if( !iVisualDecomposition)
+		{
+		}
+
 	DrawMap();
-	ChangeLightProbeMap();
- 	DrawProbe();
+	DrawProbe();
 
 	ShowFPS();
 
@@ -677,10 +709,10 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 
 	//vertex count
 	int vertCount(	 static_cast<int>( aMesh->iVertices.size()    ) );
-//	int normalCount( static_cast<int>( aMesh->iFaceNormals.size() ) );
+	//	int normalCount( static_cast<int>( aMesh->iFaceNormals.size() ) );
 
 	TVector3  vx[3];
-//	TVector3  nv[3];
+	//	TVector3  nv[3];
 	TColorRGBA colors[3];
 	const int numberOfVC = KSamplingResolution*KSamplingResolution*6;
 
@@ -806,7 +838,7 @@ bool CMyRenderer::ValidPRTDataExists()
 		infile.close();
 		return false;
 		}
-	
+
 	infile.close();
 	return true;
 	}
@@ -874,18 +906,18 @@ void CMyRenderer::SavePRTData()
 	//for all the objects in the scene...
 	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
 		{
-//		printf(" O: %d\n", i );
+		//		printf(" O: %d\n", i );
 		CMesh* currentMesh = iSceneGraph.at( i );
 		int numVertices=currentMesh->iVertices.size();
 
 		//...and for all the vertices in objects...
 		for(int j=0; j<numVertices; ++j)
 			{
-//			printf("  V: %d/%d\n", j, numVertices );
+			//			printf("  V: %d/%d\n", j, numVertices );
 			//load the visibility coefficients
 			for(int k=0;k<numOfSamples;k++)
 				{
-//				printf("   S: %d/%d\n", k, numOfSamples );
+				//				printf("   S: %d/%d\n", k, numOfSamples );
 				outFile.write((char *)&currentMesh->iVisibilityCoefficients.at(j).at(k), sizeof(float));
 				}
 			}
@@ -958,7 +990,7 @@ void CMyRenderer::PreCalculateDirectLight()
 					{
 					//Fill in a RAY structure for this sample
 					ray.Set( currentMesh->iVertices.at(j) + currentMesh->iVertexNormals.at(j)*KEpsilon*2.0
-							, iSampleData.at(k) );
+						, iSampleData.at(k) );
 
 					//See if the ray is blocked by any object
 					rayBlocked = IsRayBlocked( &ray );
@@ -1052,7 +1084,7 @@ void CMyRenderer::DrawCubemap()
 	{
 	glColor3f(1.0f,1.0f,1.0f);
 	glEnable(GL_TEXTURE_2D);
-	
+
 	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
 	//glDisable(GL_CULL_FACE);
 	//glDisable(GL_LIGHTING );
@@ -1124,7 +1156,34 @@ void CMyRenderer::DrawCubemap()
 	//glEnable(GL_LIGHTING );
 	}
 
+void CMyRenderer::ActivateDecomposition()
+	{
+	iVisualDecomposition = true;
 
+	DecomposeLightProbeMap();
+	}
+
+void CMyRenderer::ActivateReconstruction()
+	{
+	iVisualDecomposition = false;
+	iCubeMapVertex--;
+	ChangeVertexMap();
+
+	const int faceDimension=KSamplingResolution*KSamplingResolution;
+
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[0] ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(iLightProbe->iX)) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[1] ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(iLightProbe+faceDimension)->iX) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[2] ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(iLightProbe+faceDimension*2)->iX) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[3] ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(iLightProbe+faceDimension*3)->iX) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[4] ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(iLightProbe+faceDimension*4)->iX) );
+	glBindTexture( GL_TEXTURE_2D,( iProbeMapTextures[5] ) );
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, KSamplingResolution, KSamplingResolution, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(iLightProbe+faceDimension*5)->iX) );
+	}
 
 void CMyRenderer::DrawMap()
 	{
@@ -1133,7 +1192,7 @@ void CMyRenderer::DrawMap()
 	glColor3f( 1.0f,1.0f,0.0);
 	glTranslatef( iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iX, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iY, iSceneGraph.at(0)->iVertices.at(iCubeMapVertex).iZ );
 	glutSolidSphere(0.05f, 16,16);
-	
+
 
 	glDepthFunc(GL_ALWAYS);	// don't need to clear depth buffer
 	//glDisable(GL_DEPTH_TEST);
@@ -1148,7 +1207,7 @@ void CMyRenderer::DrawMap()
 	glPushMatrix();
 	glLoadIdentity();
 
-//	glTranslatef(0.375f, 1.5f, 0.0f);
+	//	glTranslatef(0.375f, 1.5f, 0.0f);
 
 	glColor3f(1.0, 1.0, 1.0 );
 
