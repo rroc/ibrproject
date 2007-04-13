@@ -399,6 +399,7 @@ void CMyRenderer::ChangeVertexMap()
 	{
 	const int offSet = KSamplingResolution*KSamplingResolution;
 
+
 	if(++iCubeMapVertex >= iSceneGraph.at(0)->iVisibilityCoefficients.size())
 		{
 		iCubeMapVertex = 0;
@@ -407,39 +408,25 @@ void CMyRenderer::ChangeVertexMap()
 #ifndef USE_FP_TEXTURES
 	GLubyte* checkImage = new GLubyte[ KSamplingResolution*KSamplingResolution*4*6 ];
 
-	float* data;
+	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+	float* data1 = data; //NASTY!
+
+
 	if( iVisualDecomposition )
 		{
-		data = DecomposeVisibility();
-		}
-	else
-		{
-		data = 	= reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+		data1 = DecomposeVisibility();
 		}
 
 	int first=KSamplingResolution*KSamplingResolution;
 
 	for (int i=0,endI=KSamplingResolution*KSamplingResolution*6;i<endI;i++)
 		{
-		if (i<first)
-			{
-			int val = 0xFF * *(data+i);
+			int val = 0xFF * *(data1+i);
 			*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
 			*(checkImage+i*4+1) = (GLubyte)val; //green
 			*(checkImage+i*4+2) = (GLubyte)val; //blue
 			*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
-			}
-		else
-			{
-			int val = 0xFF * *(data+i);
-			*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
-			*(checkImage+i*4+1) = (GLubyte)val; //green
-			*(checkImage+i*4+2) = (GLubyte)val; //blue
-			*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
-			}
 		}
-	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
@@ -463,8 +450,14 @@ void CMyRenderer::ChangeVertexMap()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, KSamplingResolution, KSamplingResolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage+offSet*4*5 );
 
 	delete[] checkImage;
-	delete[] data;
+
+	if( iVisualDecomposition )
+		{
+		delete[] data1;
+		}
+
 #else
+
 	if( iVisualDecomposition )
 		{
 		float* data;
@@ -517,15 +510,74 @@ void CMyRenderer::ChangeVertexMap()
 
 float* CMyRenderer::DecomposeVisibility()
 	{
-	GLubyte* checkImage = new GLubyte[ KSamplingResolution*KSamplingResolution*4*6 ];
 	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+	float *totaldata;
+	int res2=KSamplingResolution*KSamplingResolution;
+	float *FaceData[6];
+
 	CMatrixNoColors *matrix1= new CMatrixNoColors(data,KSamplingResolution,KSamplingResolution);
 	CWavelet *wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
 	wavelet1->nonStandardDeconstruction();
+	FaceData[0]=wavelet1->returnFloat();
 	delete matrix1;
 	delete wavelet1;
 
-	return wavelet1->returnFloat();
+	matrix1= new CMatrixNoColors(data+res2,KSamplingResolution,KSamplingResolution);
+	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	FaceData[1]=wavelet1->returnFloat();
+	delete matrix1;
+	delete wavelet1;
+
+	matrix1= new CMatrixNoColors(data+2*res2,KSamplingResolution,KSamplingResolution);
+	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	FaceData[2]=wavelet1->returnFloat();
+	delete matrix1;
+	delete wavelet1;
+
+	matrix1= new CMatrixNoColors(data+3*res2,KSamplingResolution,KSamplingResolution);
+	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	FaceData[3]=wavelet1->returnFloat();
+	delete matrix1;
+	delete wavelet1;
+
+	matrix1= new CMatrixNoColors(data+4*res2,KSamplingResolution,KSamplingResolution);
+	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	FaceData[4]=wavelet1->returnFloat();
+	delete matrix1;
+	delete wavelet1;
+
+	matrix1= new CMatrixNoColors(data+5*res2,KSamplingResolution,KSamplingResolution);
+	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+	wavelet1->nonStandardDeconstruction();
+	FaceData[5]=wavelet1->returnFloat();
+	delete matrix1;
+	delete wavelet1;
+
+
+	//int index(0);
+	totaldata=new float[res2*6];
+	float *ptr=totaldata;
+	for (int i=0;i<6;i++)
+		{
+		for (int j=0;j<res2;j++)
+			{
+			*(totaldata++)=*(FaceData[i]+j);
+			//index++;
+			}
+		}
+	//printf("Copied %d values.\n", index);
+	delete[] FaceData[0];
+	delete[] FaceData[1];
+	delete[] FaceData[2];
+	delete[] FaceData[3];
+	delete[] FaceData[4];
+	delete[] FaceData[5];
+
+	return ptr;
 	}
 
 void CMyRenderer::DecomposeLightProbeMap()
@@ -1159,8 +1211,10 @@ void CMyRenderer::DrawCubemap()
 void CMyRenderer::ActivateDecomposition()
 	{
 	iVisualDecomposition = true;
-
 	DecomposeLightProbeMap();
+
+	iCubeMapVertex--;
+	ChangeVertexMap();
 	}
 
 void CMyRenderer::ActivateReconstruction()
