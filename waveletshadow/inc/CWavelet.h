@@ -58,8 +58,8 @@ class CWavelet
 		int iRows;
 		int iCols;
 
-		THashTable iParentSum;
-		THashTable iChildSum;
+		TSquareHashTable iParentSum;
+		TSquareHashTable iChildSum;
 	public:
 		bool withColors;
 		bool decomposed;
