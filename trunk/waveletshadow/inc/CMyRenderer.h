@@ -61,7 +61,7 @@ class CMyRenderer
 		void UpdateScene();
 
 		void ChangeVertexMap();
-		void ChangeLightProbeMap();
+		void DecomposeLightProbeMap();
 
 
 
@@ -82,6 +82,8 @@ class CMyRenderer
 			{ return iScreenHeight; };
 
 
+		void ActivateDecomposition();
+		void ActivateReconstruction();
 
 	//PRIVATE FUNCTIONS
 	//------------------
@@ -105,6 +107,9 @@ class CMyRenderer
 		//per Vertex cubemap
 		void DrawMap();
 		void DrawProbe();
+
+		float* DecomposeVisibility();
+
 
 		void DrawLightSphere();
 
@@ -136,6 +141,7 @@ class CMyRenderer
 
 		GLenum iWireFrame;
 
+
 	//PRIVATE DATA
 	//------------------
 	private:
@@ -157,8 +163,9 @@ class CMyRenderer
 		int iVerticesInScene;
 
 		int iCubeMapVertex;
-
 		int	iObjectCount;
+
+		bool iVisualDecomposition;
 
 		//The sampling vectors for raytracing
 		vector<TVector3>			iSampleData;

@@ -41,6 +41,14 @@ void CMyUiEvents::ProcessNormalKeys(unsigned char key, int x, int y)
 		case 13:
 			iRenderer->ChangeVertexMap();
 			break;
+		case 'd':
+		case 'D':
+			iRenderer->ActivateDecomposition();
+			break;
+		case 'r':
+		case 'R':
+			 iRenderer->ActivateReconstruction();
+			break;
 		case 'w':
 		case 'W':
 			if(iRenderer->iWireFrame == GL_TRIANGLES)
