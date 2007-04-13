@@ -614,12 +614,22 @@ void CMyRenderer::DecomposeLightProbeMap()
 	CWavelet *BackWavelet=new CWavelet(BackLightProbe,KSamplingResolution,KSamplingResolution);
 
 	//wavelet compression of all the faces of the cubemap Lightprobe
-	RoofWavelet->nonStandardDeconstruction();
-	LeftWavelet->nonStandardDeconstruction();
-	FrontWavelet->nonStandardDeconstruction();
-	RightWavelet->nonStandardDeconstruction();
-	FloorWavelet->nonStandardDeconstruction();
-	BackWavelet->nonStandardDeconstruction();
+
+	//standard wavelet basis visualisation
+	RoofWavelet->standardDeconstruction();
+	LeftWavelet->standardDeconstruction();
+	FrontWavelet->standardDeconstruction();
+	RightWavelet->standardDeconstruction();
+	FloorWavelet->standardDeconstruction();
+	BackWavelet->standardDeconstruction();
+
+	////non-standard wavelet basis visualisation
+	//RoofWavelet->nonStandardDeconstruction();
+	//LeftWavelet->nonStandardDeconstruction();
+	//FrontWavelet->nonStandardDeconstruction();
+	//RightWavelet->nonStandardDeconstruction();
+	//FloorWavelet->nonStandardDeconstruction();
+	//BackWavelet->nonStandardDeconstruction();
 	//printf("\n\n\n lightprobe faces' wavelets generated");	
 
 	float *f0=RoofWavelet->returnScaledFloat();
