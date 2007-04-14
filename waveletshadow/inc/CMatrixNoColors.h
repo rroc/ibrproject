@@ -1,12 +1,13 @@
 #pragma once
 #include<vector>
+#include "THashtable.h"
 class CMatrixNoColors
 {
 	public:
 		CMatrixNoColors();
 		CMatrixNoColors(int aRows, int aCols);
 		CMatrixNoColors(float* aMatrix, int aRows, int aCols);
-		//CMatrixNoColors(TVector3 *aMatrix, int aRows, int aCols);
+		CMatrixNoColors(TIntHashTable *aMatrix, int aRows, int aCols, int aFace);//implemented for a cubemap, 'NOT' generic hashtable constructor
 		
 		~CMatrixNoColors();
 

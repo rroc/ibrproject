@@ -1,5 +1,7 @@
 #pragma once
 
+#define _CRT_SECURE_NO_DEPRECATE
+
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
@@ -16,15 +18,13 @@ using namespace std;
 class TSquare
 	{
 	public:
-		TSquare( int aL, int aX, int aY )
-			: l(aL)
-			, x(aX)
+		TSquare(  int aX, int aY )
+			: x(aX)
 			, y(aY)
 			{
 			//empty on purpose
 			}
 	public:
-		int l; //level
 		int x; //x-coord
 		int y; //y-coord
 	};
@@ -39,4 +39,4 @@ class TSquare
 #define KDegreeToRadian M_PI/180.0
 
 #define USE_OPENMP
-#define USE_FP_TEXTURES
+//#define USE_FP_TEXTURES

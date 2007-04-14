@@ -88,7 +88,7 @@ class TSquareHasher : public stdext::hash_compare <TSquare>
 		//compare hash
 		bool operator() (const TSquare& s1, const TSquare& s2) const
 			{
-			return ( (s1.l > s2.l) || (s1.x > s2.x) || (s1.y > s2.y) );
+			return ( (s1.x > s2.x) || (s1.y > s2.y) );
 			}
 
 //------------------------------------------------------------
