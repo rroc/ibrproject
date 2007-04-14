@@ -2,6 +2,7 @@
 #include <vector>
 #include "CMatrixNoColors.h"
 
+
 CMatrixNoColors::CMatrixNoColors()
 {
 	iRows=0;
@@ -66,6 +67,38 @@ CMatrixNoColors::CMatrixNoColors(float* aMatrix, int aRows, int aCols)
 	iCols=aCols;
 }
 
+CMatrixNoColors::CMatrixNoColors( TIntHashTable *aMatrix, int aRows, int aCols, int aFace )
+	{
+	iRows=aRows;
+	iCols=aCols;
+
+	//create empty Matrix
+	std::vector<float> r;
+	r.resize(aCols,0.0);
+	for(int rows=0; rows<aRows; rows++)
+		{
+		iMatrix.push_back(r);
+		}
+
+	//Browse through the hash
+	int index=0;
+	int faceSize=iRows*iCols;
+
+    TIntHashTable::iterator itCurrent;
+	TIntHashTable::iterator itEnd	= aMatrix->end();
+	for(int rows=0; rows<aRows; rows++)
+		{
+		for(int cols=0; cols<aCols; cols++)
+			{
+			itCurrent=aMatrix->find(rows*iCols+cols+faceSize*aFace);
+			if (itCurrent!=itEnd)
+				{
+				iMatrix.at(rows).at(cols)=itCurrent->second;
+				}
+			}
+		}
+
+	}
 CMatrixNoColors::~CMatrixNoColors()
 {
 	for(int rows=0;rows<iRows;rows++)
@@ -144,7 +177,7 @@ void CMatrixNoColors::operator /(float a)
 
 	for(int rows=0;rows<iRows; rows++)
 	{
-		printf("\n");
+		//printf("\n");
 		for(int cols=0; cols<iCols; cols++)
 		{
 //			printf("(%f)", iMatrix.at(rows).at(cols));

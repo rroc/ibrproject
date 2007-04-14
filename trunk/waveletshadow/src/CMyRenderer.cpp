@@ -22,6 +22,7 @@ static const string KObjectFileName = KObjectName+".obj";
 
 static const string KDataFileName	  = KObjectName + "_coefficients.bin";
 static const string KHashDataFileName = KObjectName + "_hash_coefficients.bin";
+static const string KWaveletDataFileName = KObjectName + "_wavelet_coefficients.bin";
 
 static const float KLightVectorSize( 3.0 );
 
@@ -108,12 +109,12 @@ void CMyRenderer::InitMain()
 
 	glMatrixMode( GL_VIEWPORT );
 	glViewport(0, 0, (GLsizei)iScreenWidth, (GLsizei)iScreenHeight);
-		
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45, (GLdouble)iScreenWidth/(GLdouble)iScreenHeight, 0.001, 10);
 
-//	glOrtho( -1, 1, -1, 1, 0.01, 1000 );
+	//	glOrtho( -1, 1, -1, 1, 0.01, 1000 );
 
 	glMatrixMode(GL_MODELVIEW);
 
@@ -129,7 +130,7 @@ void CMyRenderer::InitMain()
 	InitVertexMap();
 	InitHashTables();
 
-//	SavePRTHashData();
+	//	SavePRTHashData();
 
 	//	iLightVector = iLightData->GetLightVector();
 	//glLightfv( GL_LIGHT0, GL_POSITION, reinterpret_cast<GLfloat*>(&iLightVector) );
@@ -428,11 +429,11 @@ void CMyRenderer::ChangeVertexMap()
 
 	for (int i=0;i<KSamplingTotalCoefficients;i++)
 		{
-			int val = 0xFF * *(data1+i);
-			*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
-			*(checkImage+i*4+1) = (GLubyte)val; //green
-			*(checkImage+i*4+2) = (GLubyte)val; //blue
-			*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
+		int val = 0xFF * *(data1+i);
+		*(checkImage+i*4) =	(GLubyte)val; //((((i&0x8)==0)^((i*width&0x8))==0))*255;; //red
+		*(checkImage+i*4+1) = (GLubyte)val; //green
+		*(checkImage+i*4+2) = (GLubyte)val; //blue
+		*(checkImage+i*4+3) = (GLubyte)0xFF; // alpha
 		}
 	//roof
 	glBindTexture( GL_TEXTURE_2D, iTextures.at( iVertexMapTextures[0]-1 ) );
@@ -517,52 +518,27 @@ void CMyRenderer::ChangeVertexMap()
 
 float* CMyRenderer::DecomposeVisibility()
 	{
-	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(iCubeMapVertex).at(0));
+	return DecomposeVisibility( iCubeMapVertex );
+	}
+
+float* CMyRenderer::DecomposeVisibility( int aVertexIndex )
+	{
+	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(aVertexIndex).at(0));
 	float *totaldata;
 	float *FaceData[6];
 
-	CMatrixNoColors *matrix1= new CMatrixNoColors(data,KSamplingResolution,KSamplingResolution);
-	CWavelet *wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	FaceData[0]=wavelet1->returnFloat();
-	delete matrix1;
-	delete wavelet1;
 
-	matrix1= new CMatrixNoColors(data+KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
-	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	FaceData[1]=wavelet1->returnFloat();
-	delete matrix1;
-	delete wavelet1;
-
-	matrix1= new CMatrixNoColors(data+2*KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
-	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	FaceData[2]=wavelet1->returnFloat();
-	delete matrix1;
-	delete wavelet1;
-
-	matrix1= new CMatrixNoColors(data+3*KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
-	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	FaceData[3]=wavelet1->returnFloat();
-	delete matrix1;
-	delete wavelet1;
-
-	matrix1= new CMatrixNoColors(data+4*KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
-	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	FaceData[4]=wavelet1->returnFloat();
-	delete matrix1;
-	delete wavelet1;
-
-	matrix1= new CMatrixNoColors(data+5*KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
-	wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
-	wavelet1->nonStandardDeconstruction();
-	FaceData[5]=wavelet1->returnFloat();
-	delete matrix1;
-	delete wavelet1;
-
+	CMatrixNoColors *matrix1;
+	CWavelet *wavelet1;;
+	for (int i=0;i<6;i++)
+		{
+		matrix1= new CMatrixNoColors(data+KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
+		wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
+		wavelet1->standardDeconstruction();
+		FaceData[i]=wavelet1->returnFloat();
+		delete matrix1;
+		delete wavelet1;
+		}
 
 	int index(0);
 	totaldata=new float[KSamplingFaceCoefficients*6];
@@ -578,7 +554,7 @@ float* CMyRenderer::DecomposeVisibility()
 			index++;
 			}
 		}
-	printf("Copied %d values. [first:%f, last:%f]\n", index, *ptr, *(ptr+(index-1)) ) ;
+	//printf("Copied %d values. [first:%f, last:%f]\n", index, *ptr, *(ptr+(index-1)) ) ;
 
 	delete[] FaceData[0];
 	delete[] FaceData[1];
@@ -589,6 +565,7 @@ float* CMyRenderer::DecomposeVisibility()
 
 	return ptr;
 	}
+
 
 void CMyRenderer::DecomposeLightProbeMap()
 	{   
@@ -693,7 +670,7 @@ void CMyRenderer::RenderScene()
 	if( iRotationFinished )
 		{
 		iRotationAngleChange *= 0.9f;
-		
+
 		//iRotationAxis.iY *= 1.2f;
 		//iRotationAxis.iX *= 0.8f;
 		//iRotationAxis.iZ *= 0.8f;
@@ -888,9 +865,26 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 	{
 	printf("\nPrecomputed Radiance Transfer...\n");
 
-	if ( ValidPRTDataExists( KHashDataFileName ) )
+	if ( ValidPRTDataExists( KWaveletDataFileName ) )
+		{
+		LoadPRTWaveletData();
+		return;
+		} 
+	//OLD DATA TYPE TO NEW ONE
+	else if ( ValidPRTDataExists( KHashDataFileName ) )
 		{
 		LoadPRTHashData();
+
+		printf("CONVERTING TO NEW FORMAT...\n");
+		printf("---------------------------\n");
+		//InitVertexMap();
+		//InitHashTables();
+		//SavePRTHashData();
+		InitWaveletHash();
+		SavePRTWaveletData();
+
+		printf("You can now start with the new data\n");
+		exit(-1);
 		return;
 		} 
 	//OLD DATA TYPE TO NEW ONE
@@ -903,16 +897,24 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 		InitVertexMap();
 		InitHashTables();
 		SavePRTHashData();
+		
 		printf("You can now start with the new data\n");
 		exit(-1);
 		return;
+	
 		} 
+
 	else
 		{
 		PreCalculateDirectLight();
+		InitVertexMap();
+		InitHashTables();
+		InitWaveletHash();
+
 		//SavePRTData();
-		SavePRTHashData();
-		
+		//SavePRTHashData();
+		SavePRTWaveletData();
+
 		//iTextures.push_back( 
 		//				CreateTexture( 
 		//					  reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(0).at(0) )
@@ -1089,7 +1091,7 @@ void CMyRenderer::LoadPRTHashData()
 	std::ifstream infile( KHashDataFileName.c_str(), std::ios::in | std::ios::binary);
 	if(!infile.is_open())
 		{
-		printf("File access error while loading: %d.\n", KHashDataFileName.c_str() );
+		printf("File access error while loading: %s.\n", KHashDataFileName.c_str() );
 		exit(-1);
 		}
 
@@ -1141,6 +1143,127 @@ void CMyRenderer::LoadPRTHashData()
 			}
 		}
 	infile.close();
+	printf("Loaded %d bytes from file OK.\n\n", datasize*(sizeof(float) + sizeof(int)));
+	return;
+	}
+
+void CMyRenderer::SavePRTWaveletData()
+	{
+	printf("Saving PRT Wavelet Data to a file(\"%s\").\n", KWaveletDataFileName.c_str() );
+	std::ofstream outFile( KWaveletDataFileName.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+
+	//Create header
+	int numOfTotalVertices( iVerticesInScene );
+	outFile.write((const char *)&KSamplingTotalCoefficients, sizeof(int));
+	outFile.write((const char *)&numOfTotalVertices, sizeof(int));
+
+	printf(" - Samples/Vertices/Objects: %d/%d/%d\n", KSamplingTotalCoefficients, numOfTotalVertices, iSceneGraph.size() );
+
+	//for all the objects in the scene...
+	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
+		{
+		//		printf(" O: %d\n", i );
+		CMesh* currentMesh = iSceneGraph.at( i );
+		int numVertices=currentMesh->iVertices.size();
+
+		TIntHashTable::iterator it;		
+		TIntHashTable::iterator itEnd;		
+		int index(0);
+
+		//...and for all the vertices in objects...
+		for(int j=0; j<numVertices; ++j)
+			{
+			//1. Write the number of elements in a hash table for the vertex
+			int size=currentMesh->iWaveletHash.at(j).size();
+			outFile.write( (char *)&size, sizeof(int));
+
+			//Browse through the hash
+			int index=0;
+			it		= currentMesh->iWaveletHash.at(j).begin();
+			itEnd	= currentMesh->iWaveletHash.at(j).end();
+			while( it != itEnd )
+				{
+				//write the "key"
+				outFile.write( (char *) &(it->first), sizeof(int));
+				//write the value
+				outFile.write( (char *) &(it->second), sizeof(float));
+				it++;
+				index++;
+				}
+			}
+		}
+	outFile.close();
+	printf("\nSaving Wavelet Data OK.\n");
+	}
+
+
+void CMyRenderer::LoadPRTWaveletData()
+	{
+	std::ifstream infile( KWaveletDataFileName.c_str(), std::ios::in | std::ios::binary);
+	if(!infile.is_open())
+		{
+		printf("File access error while loading: %s.\n", KWaveletDataFileName.c_str() );
+		exit(-1);
+		}
+
+	//read the header (again!)
+	int numOfSamples;
+	int numOfTotalVertices;
+	infile.read((char *)&numOfSamples,		sizeof(int));
+	infile.read((char *)&numOfTotalVertices,	sizeof(int));
+
+	printf("Loading from file (\"%s\")...\n", KWaveletDataFileName.c_str() );
+
+	int datasize(0);
+
+	//for all the objects in the scene...
+	for(int i=0, endI=iSceneGraph.size(); i<endI; ++i)
+		{
+		CMesh* currentMesh = iSceneGraph.at( i );
+		int numvertices=currentMesh->iVertices.size();;
+		currentMesh->iVisibilityCoefficients.clear();
+		currentMesh->iVisibilityCoefficients.resize(numvertices);
+		currentMesh->iVisibilityHash.resize( numvertices );
+
+		int key(0);
+		float value(0);
+
+		//...and for all the vertices in objects...
+		for(int j=0; j<numvertices; ++j)
+			{
+			int amountOfHashValues(0);
+			infile.read((char *)&amountOfHashValues, sizeof(int));
+			//printf("Hash(%d) = %d\n", j, amountOfHashValues);
+
+			//vector<float> vertexVisibilityCoefficients( KSamplingTotalCoefficients );
+
+			//load the visibility coefficients
+			for(int k=0;k<amountOfHashValues;k++)
+				{
+				infile.read((char *)&key, sizeof(int));
+				infile.read((char *)&value, sizeof(float));
+
+				//printf("[%d: %f]\n", key, value);
+
+				//vertexVisibilityCoefficients.at(key) = value;
+				//currentMesh->iVisibilityHash.at(j).insert( make_pair(key, value) );
+				
+				currentMesh->iWaveletHash.at(j).insert(make_pair(key,value));
+				datasize++;
+				}
+			float *loaded=ReconstructVisibility(&currentMesh->iWaveletHash.at(j));
+
+			vector<float> vertexVisibilityCoefficients( KSamplingTotalCoefficients );
+			for (int i=0;i<KSamplingTotalCoefficients;i++)
+				{
+				vertexVisibilityCoefficients.at(i)=*(loaded+i);						
+				}
+			delete[] loaded;
+			currentMesh->iVisibilityCoefficients.at(j) = vertexVisibilityCoefficients;
+			}
+		}
+	infile.close();
+	InitHashTables();
 	printf("Loaded %d bytes from file OK.\n\n", datasize*(sizeof(float) + sizeof(int)));
 	return;
 	}
@@ -1804,7 +1927,7 @@ void CMyRenderer::RotatingFinished( float aSpeed )
 	{
 	iRotationFinished = true;
 	iRotationAngleChange = aSpeed * 7.0f;
-	
+
 	ApplyRotations();
 	iRotationAngle = 0.0f;
 	}
@@ -1831,6 +1954,84 @@ void CMyRenderer::RotatingStarted()
 		iRotationAxis.set(0,0,0);
 		}
 	}
+
+void CMyRenderer::InitWaveletHash()
+	{
+	for(int object=0, endI=iSceneGraph.size(); object<endI; object++)
+		{
+		int numberOfVertices = iSceneGraph.at(object)->iVertices.size();
+		iSceneGraph.at(object)->iWaveletHash.resize( numberOfVertices );
+
+		for( int vertex=0;vertex<numberOfVertices; vertex++)
+			{
+			float *faces=DecomposeVisibility(vertex); 
+
+			for(int coefficient=0; coefficient<KSamplingTotalCoefficients; coefficient++)
+				{
+				float value= *(faces+coefficient);
+				//store the non-empty
+				if( 0.0f != value )
+					{
+					//TSquare key( 0, 0, coefficient );
+					iSceneGraph.at(object)->iVisibilityHash.at(vertex).insert( make_pair(coefficient, value) );
+					}
+				//else
+				//	{
+				//	}
+				}
+			//			printf("[%d: %d] = %d\n", object, vertex, iSceneGraph.at(object)->iVisibilityHash.at(vertex).size() );
+			//			iSceneGraph.at(object)->iVisibilityCoefficients.at(vertex).clear();
+			}
+		//		iSceneGraph.at(object)->iVisibilityCoefficients.clear();
+		}
+	}
+
+float* CMyRenderer::ReconstructVisibility( TIntHashTable* aHashTable )
+	{
+	//float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(aVertexIndex).at(0));
+
+	float *totaldata;
+	float *FaceData[6];
+	
+	CMatrixNoColors *matrix;
+	CWavelet *wavelet;
+	for (int i=0;i<6;i++)
+	{
+	matrix=new CMatrixNoColors(aHashTable,KSamplingResolution,KSamplingResolution,i);
+	wavelet=new CWavelet(matrix,KSamplingResolution,KSamplingResolution);
+	wavelet->standardReconstruction();
+	FaceData[i]=wavelet->returnFloat();
+	delete matrix;
+	delete wavelet;
+	}
+
+	int index(0);
+	totaldata=new float[KSamplingFaceCoefficients*6];
+	float *ptr=totaldata;
+	for (int i=0;i<6;i++)
+		{
+		for (int j=0;j<KSamplingFaceCoefficients;j++)
+			{
+#ifdef USE_FP_TEXTURES
+			*(FaceData[i]+j) *= 150.0f;
+#endif
+			*(totaldata++) = *(FaceData[i]+j);
+			index++;
+			}
+		}
+	//printf("Copied %d values. [first:%f, last:%f]\n", index, *ptr, *(ptr+(index-1)) ) ;
+
+	delete[] FaceData[0];
+	delete[] FaceData[1];
+	delete[] FaceData[2];
+	delete[] FaceData[3];
+	delete[] FaceData[4];
+	delete[] FaceData[5];
+
+	return ptr;
+
+	}
+
 //EXTERNAL FUNCTIONS TO USE GLUT CALLBACKS
 //-----------------------------------------------------
 void RenderSceneWithRenderer()

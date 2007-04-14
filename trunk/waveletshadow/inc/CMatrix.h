@@ -1,14 +1,16 @@
 #pragma once
 #include<vector>
 #include "TVector3.h"
+#include "THashtable.h"
 class CMatrix
-{
+	{
 	public:
 		CMatrix();
 		CMatrix(int aRows, int aCols);
 		//CMatrix(float* aMatrix, int aRows, int aCols);
 		CMatrix(TVector3 *aMatrix, int aRows, int aCols);
-		
+		CMatrix(TSquareHashTable *aMatrix,int aRows,int aCols);
+
 		~CMatrix();
 
 		CMatrix * transpose();
@@ -16,7 +18,7 @@ class CMatrix
 		//CMatrix* operator=(float *aMatrix, int aRows, int aCols);
 		void operator /(float a);
 		void operator *(float a);
-		
+
 
 
 		CMatrix* crop(int aRow1,int aRow2,int aCol1, int aCol2 );
@@ -24,9 +26,10 @@ class CMatrix
 		float* returnFloat();
 		float* returnScaledFloat();
 
+	public:
 
 		int iRows;
 		int iCols;
-   
+
 		std::vector< std::vector<TVector3> > iMatrix;
-};
+	};

@@ -45,6 +45,43 @@ CMatrix::CMatrix(TVector3* aMatrix, int aRows, int aCols)
 
 }
 
+
+CMatrix::CMatrix(TSquareHashTable* aMatrix, int aRows, int aCols)
+	{
+	//iRows=aRows;
+	//iCols=aCols;
+
+	////create empty Matrix
+	//std::vector<TVector3> r;
+	//r.resize(aCols);
+	//for(int rows=0; rows<aRows; rows++)
+	//	{
+	//	iMatrix.push_back(r);
+	//	}
+
+	////Browse through the hash
+	//
+	//TIntHashTable::iterator it		= aMatrix.begin();
+	//TIntHashTable::iterator itEnd	= aMatrix.end();
+
+	//int row=0;
+	//int col=0;
+	//while( it != itEnd )
+	//	{
+	//	//key
+	//	int key = it->first;
+	//	//value
+	//	float value= it->second;
+	//	row= key/aCols;
+	//	col=key%aCols;
+
+	//	iMatrix.at(row).at(col)=value;
+
+	//	it++;
+	//	}
+	}
+
+
 //CMatrix::CMatrix(float* aMatrix, int aRows, int aCols)
 //{
 //	

@@ -98,6 +98,7 @@ class CMyRenderer
 		void InitLights();
 		void InitVertexMap();
 		void InitHashTables();
+		void InitWaveletHash();
 
 		//Constructors will call this one
 		void CreateScene();
@@ -115,6 +116,12 @@ class CMyRenderer
 		void DrawProbe();
 
 		float* DecomposeVisibility();
+		float* DecomposeVisibility(int aVertexIndex);
+
+
+		//float* ReconstructVisibility();
+		float* ReconstructVisibility( TIntHashTable* aHash );
+
 
 
 		void DrawLightSphere();
@@ -128,9 +135,11 @@ class CMyRenderer
 		
 		void LoadPRTData();
 		void LoadPRTHashData();
+		void LoadPRTWaveletData();
 
 		void SavePRTData();
 		void SavePRTHashData();
+		void SavePRTWaveletData();
 
 		void TransformMesh( CMesh* aMesh );
 		void MultMatrixVect(const double aMatrix[16], TVector3* aVector);
