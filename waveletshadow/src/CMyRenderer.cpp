@@ -877,8 +877,8 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 
 		printf("CONVERTING TO NEW FORMAT...\n");
 		printf("---------------------------\n");
-		//InitVertexMap();
-		//InitHashTables();
+		InitVertexMap();
+		InitHashTables();
 		//SavePRTHashData();
 		InitWaveletHash();
 		SavePRTWaveletData();
@@ -901,9 +901,7 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 		printf("You can now start with the new data\n");
 		exit(-1);
 		return;
-	
 		} 
-
 	else
 		{
 		PreCalculateDirectLight();
@@ -1153,7 +1151,9 @@ void CMyRenderer::SavePRTWaveletData()
 	std::ofstream outFile( KWaveletDataFileName.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 
 	//Create header
+//	printf("\n no of vertices: %d", iVerticesInScene);
 	int numOfTotalVertices( iVerticesInScene );
+//	printf("\n no of vertices(after): %d", numOfTotalVertices);
 	outFile.write((const char *)&KSamplingTotalCoefficients, sizeof(int));
 	outFile.write((const char *)&numOfTotalVertices, sizeof(int));
 
@@ -1224,6 +1224,7 @@ void CMyRenderer::LoadPRTWaveletData()
 		currentMesh->iVisibilityCoefficients.clear();
 		currentMesh->iVisibilityCoefficients.resize(numvertices);
 		currentMesh->iVisibilityHash.resize( numvertices );
+		currentMesh->iWaveletHash.resize(numvertices);
 
 		int key(0);
 		float value(0);
@@ -1236,6 +1237,7 @@ void CMyRenderer::LoadPRTWaveletData()
 			//printf("Hash(%d) = %d\n", j, amountOfHashValues);
 
 			//vector<float> vertexVisibilityCoefficients( KSamplingTotalCoefficients );
+			currentMesh->iWaveletHash.at(j).clear();
 
 			//load the visibility coefficients
 			for(int k=0;k<amountOfHashValues;k++)
@@ -1973,7 +1975,8 @@ void CMyRenderer::InitWaveletHash()
 				if( 0.0f != value )
 					{
 					//TSquare key( 0, 0, coefficient );
-					iSceneGraph.at(object)->iVisibilityHash.at(vertex).insert( make_pair(coefficient, value) );
+					//printf("\n coeff=%d, value =%f", coefficient,value);
+					iSceneGraph.at(object)->iWaveletHash.at(vertex).insert( make_pair(coefficient, value) );
 					}
 				//else
 				//	{
