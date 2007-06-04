@@ -3,7 +3,7 @@ clc
 close all
 %array=[9 7 3 5];
 %image=[40 40 40 39 39 39 41 41;40 29 40 9 39 239 41 141;140 140 40 9 139 139 4 4]; %imread('maki0033gs.png');
-image=double(imread('maki0033.png'))/255;
+% image=double(imread('maki0033.png'))/255;
 % image=[   16    3   24    4    3   15    5   21;
 %     2    0   23   20    4    0   17   13;
 %     2   22   14    9   11    1    8   10;
@@ -11,9 +11,9 @@ image=double(imread('maki0033.png'))/255;
 
 %vector=[1;2;3;4;5;6;7;8];
 %result1=image*vector
-decomp = decomposition( image );
-figure
-imshow(decomp);
+% decomp = decomposition( image );
+% figure
+% imshow(decomp);
 
 %vector = decomposition(vector')
 %figure
@@ -24,12 +24,16 @@ imshow(decomp);
 %disp('size of result');
 %size(result2)
 
-recomp = reconstruction( decomp );
-figure
-imshow(recomp);
+% recomp = reconstruction( decomp );
+% figure
+% imshow(recomp);
 
-% image2=double(imread('maki0033_ch.png'))/255;
-% decomp2 = nonstandaddecomposition( image2 );
+image2=double(imread('maki0033.png'))/255;
+decomp2 = nonstandarddecomposition( image2.*9000 );
+figure
+imshow(decomp2);
+
+
 % recomp2 = nonstandardreconstruction( decomp2 );
 % 
 % 
