@@ -1,5 +1,5 @@
 function vector=VectorToCube(aV)
-if( aV(3)<0 && aV(3)<=-abs(aV(1)) && aV(3)<= abs(aV(2)) )
+if( aV(3)<0 && aV(3)<=-abs(aV(1)) && aV(3)<= -abs(aV(2)) )
     vector=[3 0.5-0.5*aV(1)/aV(3) 0.5+0.5*aV(2)/aV(3) ];
 elseif( aV(3)>=0 && aV(3)>=abs(aV(1)) && aV(3)>= abs(aV(2)) )
     vector=[6 0.5+0.5*aV(1)/aV(3) 0.5+0.5*aV(2)/aV(3) ];
