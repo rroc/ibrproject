@@ -54,6 +54,7 @@ end
 
 drawNormals( vec_roof,vec_left,vec_front,vec_right, vec_floor, vec_back, empty );
 
+
 %APPLY ROTATION
 angle = (pi/180)*45;
 [uv_roof,  roofnormals] = rotateVectors(angle,0,0, vec_roof);
