@@ -3,10 +3,13 @@ function imageout = createImage( uv, ...
                 roof, left, front, right, floor, back )
 
 %create image
-length = sqrt( size( uv_roof,1 ) );
-for y=1:length-1
-    for x=1:length-1  
-        index = x + (y-1)*length;
+%disp(['uv: ', num2str( size( uv,1)) ]);
+length = sqrt( size( uv,1 ) );
+
+
+for y=1:length
+    for x=1:length  
+        index = (x) + (y-1)*length;
                     
         faceid = uv(index,1);
         
