@@ -57,13 +57,13 @@ end
 
 
 %APPLY ROTATION
-angle = -(pi/180)*5;
-uv_roof = rotateVectors(angle, vec_roof);
-uv_left = rotateVectors(angle, vec_left);
-uv_front= rotateVectors(angle, vec_front);
-uv_right= rotateVectors(angle, vec_right);
-uv_floor= rotateVectors(angle, vec_floor);
-uv_back = rotateVectors(angle, vec_back);
+angle = -(pi/180)*90;
+uv_roof = rotateVectors(angle,0,0, vec_roof);
+uv_left = rotateVectors(angle,0,0, vec_left);
+uv_front= rotateVectors(angle,0,0, vec_front);
+uv_right= rotateVectors(angle,0,0, vec_right);
+uv_floor= rotateVectors(angle,0,0, vec_floor);
+uv_back = rotateVectors(angle,0,0, vec_back);
 
 
 imroof = createImage( uv_roof, ... 
