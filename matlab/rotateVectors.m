@@ -1,4 +1,4 @@
-function uv_array = rotateVectors( x,y,z, vec_array )
+function [uv_array normals] = rotateVectors( x,y,z, vec_array )
 
 %APPLY ROTATION
 %around y axis
@@ -14,5 +14,7 @@ Rz = [ cos(z) -sin(z) 0;  sin(z) cos(z) 0;  0 0 1 ];
 
 length = size( vec_array,1 );
 for i=1:length
-    uv_array(i,:) =  VectorToCube( Rz*(Ry*(Rx*vec_array(i, :)')));
+    vec = Rz*(Ry*(Rx*vec_array(i, :)'));
+    uv_array(i,:) =  VectorToCube( vec );
+    normals(i,:) = vec;
 end
