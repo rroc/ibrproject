@@ -1,7 +1,7 @@
 function a=imagerotation()
 clc
 close all
-image=double(ReadPFM('church_cubemap_32.pfm'));
+image=double(ReadPFM('test_cubemap_32.pfm'));
 figure;imshow(image);title('original');
 
 %cut cubemap
@@ -83,7 +83,7 @@ uv_back = rotateVectors(angle, vec_back);
 imroof = createImage( uv_roof, ... 
             uv_roof, uv_left, uv_front, uv_right, uv_floor, uv_back, ...
             roof, left, front, right, floor, back );
-%figure;imshow(imroof);title('rotated');
+figure;imshow(imroof);title('rotated');
 imleft = createImage( uv_left, ... 
             uv_roof, uv_left, uv_front, uv_right, uv_floor, uv_back, ...
             roof, left, front, right, floor, back );
