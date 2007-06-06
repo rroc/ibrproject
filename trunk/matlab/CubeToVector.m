@@ -17,5 +17,7 @@ function vec= CubeToVector(aCube,u,v)
         %back
         elseif(aCube==6)
             vec=[(u-0.5)*2.0 (v-0.5)*2 1.0];
-                 
-    end
+        end
+
+length = sqrt( vec(1)*vec(1) + vec(2)*vec(2) +vec(3)*vec(3) );
+vec = vec/length;
