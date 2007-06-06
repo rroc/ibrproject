@@ -24,7 +24,7 @@ for y=1:length-1
             
             if(u>31) u=31; end
             if(v>31) v=31; end
-            imageout(x,y,:) = roof( u, v, : );
+            imageout(x,y,:) = left( u, v, : );
         elseif(faceid == 3)
             u = (round( uv_front(index,2) *length))+1;
             v = (round( uv_front(index,3) *length))+1;
