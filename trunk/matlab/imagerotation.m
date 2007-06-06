@@ -57,7 +57,7 @@ end
 
 
 %APPLY ROTATION
-angle = -(pi/180)*90;
+angle = -(pi/180)*20;
 uv_roof = rotateVectors(angle,0,0, vec_roof);
 uv_left = rotateVectors(angle,0,0, vec_left);
 uv_front= rotateVectors(angle,0,0, vec_front);
