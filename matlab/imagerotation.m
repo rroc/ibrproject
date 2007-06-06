@@ -10,9 +10,9 @@ image=double(ReadPFM('test_cubemap_32.pfm'));
 
 facew = w/3-1;
 faceh = h/4-1;
-empty = imcrop(image,[2*(w/3)+1 0 facew-2 faceh-1 ]);
+% empty = imcrop(image,[2*(w/3)+1 0 facew-2 faceh-1 ]);
 empty2 = imcrop(image,[2*(w/3)+1 0 facew faceh+1 ]);
-
+empty=empty2;
 
 roof = imcrop(image,[w/3+1 0 facew faceh+1 ]);
 %figure;imshow(roof);title('roof');
@@ -40,53 +40,24 @@ figure;imshow(loaded);title('loaded');
 
 %calculate vectors for faces
 index = 1;
-dx = 1.0/(facew);dy = 1.0/(faceh);
-for y=dy:dy:1.0
-    for x=dx:dx:1.0
+%dx = 1.0/(facew);dy = 1.0/(faceh);
+for y=1:32
+    for x=1:32
         %disp(['(',num2str(y),',',num2str(x),')']);
-        vec_roof( index,:) = CubeToVector(1, x, y);
-        vec_left( index,:) = CubeToVector(2, x, y);
-        vec_front( index,:)= CubeToVector(3, x, y);
-        vec_right( index,:)= CubeToVector(4, x, y);
-        vec_floor( index,:)= CubeToVector(5, x, y);
-        vec_back( index,:) = CubeToVector(6, x, y);
+        vec_roof( index,:) = CubeToVector(1, x/32.0, y/32.0);
+        vec_left( index,:) = CubeToVector(2, x/32.0, y/32.0);
+        vec_front( index,:)= CubeToVector(3, x/32.0, y/32.0);
+        vec_right( index,:)= CubeToVector(4, x/32.0, y/32.0);
+        vec_floor( index,:)= CubeToVector(5, x/32.0, y/32.0);
+        vec_back( index,:) = CubeToVector(6, x/32.0, y/32.0);
 
         index = index+1;
     end
 end
 
-% %get pixel coordinates
-% length = size( vec_roof,1 );
-% for i=1:length
-%     uv_roof(i,:) = VectorToCube( vec_roof(i, :) );
-% end
-% 
-% %create image
-% length = sqrt( size( uv_roof,1 ) );
-% for y=1:length
-%     for x=1:length  
-%         index = x + (y-1)*length;
-%             
-%         %uv_roof(index,:)
-%         
-%         faceid = uv_roof(index,1);
-%         %roof
-%         if(faceid == 1)
-%             u = (round( uv_roof(index,2) *length));
-%             v = (round( uv_roof(index,3) *length));
-%             imageout(x,y,:) = roof( u, v, : );
-%         else
-%             imageout(x,y,:) = [1/faceid 1/faceid 1/faceid];
-%             faceid
-%         end
-%     end
-% end
-% 
-% figure;imshow(imageout);title('output');
-
 
 %APPLY ROTATION
-angle = -(pi/180)*30;
+angle = -(pi/180)*5;
 uv_roof = rotateVectors(angle, vec_roof);
 uv_left = rotateVectors(angle, vec_left);
 uv_front= rotateVectors(angle, vec_front);
