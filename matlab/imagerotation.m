@@ -2,7 +2,7 @@ function a=imagerotation()
 clc
 close all
 image=double(ReadPFM('test_cubemap_32.pfm'));
-figure;imshow(image);title('original');
+%figure;imshow(image);title('original');
 
 %cut cubemap
 %-----------
@@ -10,9 +10,13 @@ figure;imshow(image);title('original');
 
 facew = w/3-1;
 faceh = h/4-1;
-roof = imcrop(image,[w/3+1 0 facew faceh ]);
+empty = imcrop(image,[2*(w/3)+1 0 facew-2 faceh-1 ]);
+empty2 = imcrop(image,[2*(w/3)+1 0 facew faceh+1 ]);
+
+
+roof = imcrop(image,[w/3+1 0 facew faceh+1 ]);
 %figure;imshow(roof);title('roof');
-left = imcrop(image,[0 h/4+1 facew faceh]);
+left = imcrop(image,[0 h/4+1 facew+1 faceh]);
 %figure;imshow(left);title('left');
 front = imcrop(image,[w/3+1 h/4+1 facew faceh]);
 %figure;imshow(front);title('front');
@@ -22,6 +26,17 @@ floor = imcrop(image,[w/3+1  2*(h/4)+1 facew faceh]);
 %figure;imshow(floor);title('floor');
 back = imcrop(image,[w/3+1 3*(h/4)+1 facew faceh]);
 %figure;imshow(back);title('back');
+
+% size(empty2)
+% size(roof)
+% size(left)
+% size(front)
+% size(right)
+% size(floor)
+% size(back)
+
+loaded = [empty2 roof empty2;left front right;empty2 floor empty2; empty2 back empty2];
+figure;imshow(loaded);title('loaded');
 
 %calculate vectors for faces
 index = 1;
@@ -71,7 +86,7 @@ end
 
 
 %APPLY ROTATION
-angle = pi/4;
+angle = -(pi/180)*30;
 uv_roof = rotateVectors(angle, vec_roof);
 uv_left = rotateVectors(angle, vec_left);
 uv_front= rotateVectors(angle, vec_front);
@@ -83,7 +98,7 @@ uv_back = rotateVectors(angle, vec_back);
 imroof = createImage( uv_roof, ... 
             uv_roof, uv_left, uv_front, uv_right, uv_floor, uv_back, ...
             roof, left, front, right, floor, back );
-figure;imshow(imroof);title('rotated');
+%figure;imshow(imroof);title('rotated');
 imleft = createImage( uv_left, ... 
             uv_roof, uv_left, uv_front, uv_right, uv_floor, uv_back, ...
             roof, left, front, right, floor, back );
@@ -105,3 +120,13 @@ imback = createImage( uv_back, ...
             roof, left, front, right, floor, back );
 %figure;imshow(imback);title('rotated');
 
+% size(empty)
+% size(imroof)
+% size(imleft)
+% size(imfront)
+% size(imright)
+% size(imfloor)
+% size(imback)
+
+output = [empty imroof empty;imleft imfront imright;empty imfloor empty; empty imback empty];
+figure;imshow(output);title('rotated');
