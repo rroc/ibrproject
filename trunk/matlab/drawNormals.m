@@ -26,14 +26,5 @@ for y=1:32
     end
 end
 
-ntemp = nfront;
-nroof = imrotate(nroof, 90); 
-nleft = imrotate(nleft, -90);
-nfront= imrotate(nback, 90);
-nright= imrotate(nright, -90);
-nfloor= imrotate(nfloor, 90);
-nback = imrotate(ntemp, 90);
-
-
 normals = [empty nroof empty;nleft nfront nright;empty nfloor empty; empty nback empty];
 figure;imshow(normals);title('normals');
