@@ -56,7 +56,7 @@ drawNormals( vec_roof,vec_left,vec_front,vec_right, vec_floor, vec_back, empty )
 
 
 %APPLY ROTATION
-angle = (pi/180)*45;
+angle = (pi/180)*10;
 [uv_roof,  roofnormals] = rotateVectors(angle,0,0, vec_roof);
 [uv_left,  leftnormals] = rotateVectors(angle,0,0, vec_left);
 [uv_front, frontnormals]= rotateVectors(angle,0,0, vec_front);
@@ -220,10 +220,4 @@ figure;imshow(output);title('rotated');
 %             roof, left, front, right, floor, back );
 % output = [empty imroof empty;imleft imfront imright;empty imfloor empty; empty imback empty];
 % figure;imshow(output);title('rotated');
-
-
-
-
-
-
 
