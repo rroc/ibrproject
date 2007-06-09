@@ -15,6 +15,8 @@ Rz = [ cos(z) -sin(z) 0;  sin(z) cos(z) 0;  0 0 1 ];
 length = size( vec_array,1 );
 for i=1:length
     vec = Rz*(Ry*(Rx*vec_array(i, :)'));
+%     length = sqrt( vec(1)*vec(1) + vec(2)*vec(2) +vec(3)*vec(3) );
+%     vec = vec/length;
     uv_array(i,:) =  VectorToCube( vec );
-    normals(i,:) = vec;
+    normals(i,:)  = vec;
 end

@@ -14,17 +14,17 @@ for y=1:32
         nback(x,y,:)  = (1+vec_back( index,:) ) /2;
         
         if(32==index)
-            disp( [num2str(nroof(x,y,:) )]);
-            disp( [num2str(nleft(x,y,:) )]);
-            disp( [num2str(nfront(x,y,:) )]);
-            disp( [num2str(nright(x,y,:) )]);
-            disp( [num2str(nfloor(x,y,:) )]);
-            disp( [num2str(nback(x,y,:) )]);
-            disp( [' ']);
+%             disp( [num2str(nroof(x,y,:) )]);
+%             disp( [num2str(nleft(x,y,:) )]);
+%             disp( [num2str(nfront(x,y,:) )]);
+%             disp( [num2str(nright(x,y,:) )]);
+%             disp( [num2str(nfloor(x,y,:) )]);
+%             disp( [num2str(nback(x,y,:) )]);
+%             disp( [' ']);
         end
         index = index+1;
     end
 end
 
 normals = [empty nroof empty;nleft nfront nright;empty nfloor empty; empty nback empty];
-figure;imshow(normals);title('normals');
+figure;imshow(imresize(normals,2.0));title('vectors');
