@@ -2,6 +2,8 @@
 #include "CMyRenderer.h"
 #include "CMyUiEvents.h"
 #include "CMatrix.h"
+#include "CMatrixNoColors.h"
+#include "CWavelet.h"
 
 #include "THashtable.h"
 
@@ -58,6 +60,21 @@ void initGLUTOpenGL(int argc, char **argv)
 
 int main(int argc, char **argv)
 	{
+		//float m1[4][4]={  {40, 40, 40, 39 } , {40, 29, 40, 9} , {140, 140, 40, 9} , {139, 139, 4, 4}  };
+		////float m1[1][4]= {{9,7,3,5}};
+		//float *p=&m1[0][0];
+		//CMatrixNoColors matrix1(p,4,4);
+		////matrix1.print();
+		//
+		//CWavelet wavelet1(&matrix1, 4,4);
+		//wavelet1.print();
+		//wavelet1.standardDeconstruction();
+
+		//wavelet1.standardReconstruction();
+
+		//wavelet1.print();
+		//
+		//
 	initGLUTOpenGL( argc, argv );
 
 	CMyRenderer* renderer = new CMyRenderer( KWindowWidth, KWindowHeight );
