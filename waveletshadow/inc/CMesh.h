@@ -36,6 +36,9 @@ class CMesh {
 		virtual void randomColors();
 		void randomColors( TColorRGBA& aColorMult, float aBase );
 
+		void addVertex( TVector3 aVertex );
+		void addTriangle( TTriangle aTriangle );
+
 	public:
 		std::string     iName;
 		TColorRGBA		iMaterialColor;
@@ -49,9 +52,11 @@ class CMesh {
 		vector<TVector3>  iVertexNormals; /// normals
 
 		vector<TColorRGBA> iFaceColors; ///  face colors for each triangle
-
 		vector<TColorRGBA> iVertexColors; ///  face colors for each triangle
 
+
+		int iNumVertices;
+		int iNumTriangles;
 
 		//per mesh we store (KSamplingResolution*KSamplingResolution*6) floats
 		vector< vector<float> >	iVisibilityCoefficients;

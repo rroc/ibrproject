@@ -674,7 +674,7 @@ GLuint CreateTexture(float* data, int width, int height )
 #else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 1, GL_LUMINANCE, GL_FLOAT, data );
 #endif
-	printf("Created a luminance texture: %d\n",texId);
+//	printf("Created a luminance texture: %d\n",texId);
 	return(texId);
 	}
 
@@ -714,76 +714,18 @@ GLuint CreateTexture(TVector3* data, int width, int height )
 #else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 1, GL_RGB, GL_FLOAT, reinterpret_cast<float*>(&(data->iX)) );
 #endif
-	printf("Created a color texture: %d\n",texId);
+//	printf("Created a color texture: %d\n",texId);
 	return(texId);
 	}
 
 
-GLuint LoadPFMTexture( string filename )
-	{
-	std::ifstream infile( filename.c_str(), std::ios::in | std::ios::binary);
-	if(!infile.is_open())
-		{
-		printf("File access error while loading: %s\n", filename.c_str());
-		exit(-1);
-		}
-
-	//read the header
-	char id;
-	char type;
-	int channels(1);
-	int width(0);
-	int height(0);
-
-	infile.read((char *)&id,	sizeof(char));
-	infile.read((char *)&type,	sizeof(char));
-	if (type == 'F')
-		{
-		channels=3;
-		}	
-	infile >> width;
-	infile >> height;
-	printf("ID:%c, Type:%c, Size: %dx%d\n", id, type, width, height );
-
-	float byteOrder(0);
-	infile >> byteOrder;
-	infile.ignore(1);//ignore the newline
-
-	if (byteOrder<0)
-		{
-		//little-endian
-		printf("Little endian (%f)\n", byteOrder);
-		}
-	else
-		{
-		//big-endian
-		printf("Big endian (%f)\n", byteOrder);
-		printf("Big endian not supported atm.\n");
-		exit(-1);
-		}
-
-	//read the data
-	int size = width*height*channels;
-	float* data = new float[size];	
-	infile.read((char*) data, sizeof(float)*size);	
-
-	infile.close();
-
-	vector<TVector3> imageData;
-	for(int i=0;i<size; i+=3)
-		{
-		TVector3 vec( *(data), *(data+1), *(data+2) );
-		imageData.push_back( vec );
-		printf("[%f, %f, %f]\n", vec.iX, vec.iY, vec.iZ);
-		}
-	delete[] data;
-	imageData.clear();
-	}
-
-TVector3* LoadPFMCubeMap( string filename, int aTextureIds[6] )
+TVector3* LoadPFMTexture( string filename )
 	{
 	FILE *infile = fopen(filename.c_str(), "rb");
 
+	//----------------------
+	// READ HEADER
+	//----------------------
 	int fileType = fgetc(infile);
 	int formatRGB = fgetc(infile);
 	int junk = fgetc(infile); //newline
@@ -829,8 +771,106 @@ TVector3* LoadPFMCubeMap( string filename, int aTextureIds[6] )
 	fileType = width * (formatRGB ? 3 : 1);
 	float *fbuf = new float[fileType];
 
+//	printf("Face: %d x %d\n", widthFace, heightFace );
+
+	//----------------------
+	// READ DATA
+	//----------------------
+	TVector3 *cur = data;
+
+	//READ ALL THE ROWS
+	for(int j = 0; j < height; j++)
+		{
+		if (fread(fbuf, sizeof(float), fileType, infile) != (size_t) fileType)
+			{
+			fclose(infile);
+			delete fbuf;
+			return 0;
+			}
+
+		//FILL THE COLUMNS
+		float *temp = fbuf;
+		for (int i = 0; i < width; i++)
+			{
+			if (formatRGB)
+				{
+				cur->iX = *temp++;
+				cur->iY = *temp++;
+				cur->iZ = *temp++;
+				}
+			else			// black and white
+				{
+				float c;
+				c = *temp++;
+				cur->iX = cur->iY = cur->iZ = c;
+				}
+			cur++;
+			}
+		}
+	delete fbuf;
+	fclose(infile);
+
+	return data;
+	}
+
+
+TVector3* LoadBasicPFMCubeMap( string filename, int aTextureIds[6] )
+	{
+	FILE *infile = fopen(filename.c_str(), "rb");
+
+	//----------------------
+	// READ HEADER
+	//----------------------
+	int fileType = fgetc(infile);
+	int formatRGB = fgetc(infile);
+	int junk = fgetc(infile); //newline
+
+	if ((fileType != 'P') || ((formatRGB != 'F') && (formatRGB != 'f')))
+		{
+		fclose(infile);
+		printf("Not a valid pfm file: %s\n", filename.c_str());
+		exit(-1);
+		}
+
+	formatRGB = (formatRGB == 'F');		// 'F' = RGB,  'f' = monochrome
+	int width, height;
+	fscanf(infile, "%d %d%c", &width, &height, &junk);
+	if ((width <= 0) || (height <= 0))
+		{
+		fclose(infile);
+		printf("Size is 0 x 0\n");
+		exit(-1);
+		}
+
+	float scalefactor;
+	fscanf(infile, "%f%c", &scalefactor, &junk);
+
+	int widthFace = width/3;
+	int heightFace = height/4;
+	int faceSize = widthFace*heightFace;
+
+	TVector3* data = new TVector3[ 6*widthFace*heightFace ];
+
+	if (!data)
+		{
+		fclose(infile);
+		printf("Out of Memory. (too large PFM file?)\n");
+		exit(-1);
+		}
+	if (scalefactor > 0.0)
+		{
+		printf("No MSB support yet.\n");
+		exit(-1);
+		}
+
+	fileType = width * (formatRGB ? 3 : 1);
+	float *fbuf = new float[fileType];
+
 	printf("Face: %d x %d\n", widthFace, heightFace );
 
+	//----------------------
+	// READ DATA
+	//----------------------
 	TVector3 *cur = data;
 	for(int j = 0; j < height; j++)
 		{
@@ -887,81 +927,33 @@ TVector3* LoadPFMCubeMap( string filename, int aTextureIds[6] )
 	delete fbuf;
 	fclose(infile);
 
-
-	//FIX center row
-	TVector3* fixer = (data+faceSize*2); //first row should be ok
-	TVector3* fixed  = new TVector3[faceSize*3];
-	TVector3* first  = fixed;
-	TVector3* second = fixed+faceSize;
-	TVector3* third  = fixed+faceSize*2;
-
-	for (int j=0;j<heightFace;j++)
-		{
-		for (int i=0; i<width;i++)
-			{
-//			printf("%d: ",i);
-			if(i<widthFace)
-				{
-//				printf("third");
-				*third++ = *fixer;
-				}
-			else if(i>=widthFace && i<widthFace*2)
-				{
-//				printf("second");
-				*second++ = *fixer;
-				}
-			else
-				{
-//				printf("first");
-				*first++ = *fixer;
-				}
-//			printf(" (%f,%f,%f)\n",fixer->iX,fixer->iY,fixer->iZ);
-			fixer++;
-			}
-		}
-
-	//int dOffSet = (widthFace*heightFace*6) -1;
-	//printf("FIRST/LAST: [%f, %f, %f] / [%f, %f, %f]\n", data->iX,data->iY,data->iZ,  (data+dOffSet)->iX,(data+dOffSet)->iY,(data+dOffSet)->iZ );
-
-//	printf("[%f, %f, %f] - [%f, %f, %f]", data->iX,data->iY,data->iZ,  (data+dOffSet)->iX,(data+dOffSet)->iY,(data+dOffSet)->iZ );
-	first  = fixed;
-	//second = fixed+faceSize;
-	//third  = fixed+faceSize*2;
-	TVector3* temp = (data+faceSize*2);
-	for( int i=0; i<faceSize*3; i++)
-		{
-		*temp++ = *first++;
-		}
-
+	//----------------------
+	// RE-ORDER DATA 
+	// (pfm files are stored upside down)
+	//----------------------
 	int offSet = widthFace*heightFace;
-
-	first  = data;
-	second = data+offSet;
-	third  = data+offSet*2;
-	TVector3* fourth = data+offSet*3;
-	TVector3* fifth = data+offSet*4;
-	TVector3* sixth = data+offSet*5;
-	TVector3* tempVec = fixed;
-
-	//SWAP
-	for(int i=0;i<offSet;i++)
+	fixCenterRow( data, faceSize, widthFace, heightFace, width );
+	
+	//FLIP the order (PFM from hdr shop is stored in a weird way... upsidedown, but still left to right!)
+	TVector3* start;
+	TVector3* end;
+	TVector3 temp;
+	start = data;
+	end   = start+(offSet*6) - widthFace;
+	int i=0;
+	while (start<(end+i))
 		{
-		//1<->6
-		*(tempVec+i) = *(first+i);
-		*(first+i) = *(sixth+i);
-		*(sixth+i) = *(tempVec+i);
-
-		//2<->5
-		*(tempVec+i) = *(second+i);
-		*(second+i)= *(fifth+i);
-		*(fifth+i) = *(tempVec+i);
-
-		//3<->4
-		*(tempVec+i) = *(third+i);
-		*(third+i) = *(fourth+i);
-		*(fourth+i) = *(tempVec+i);
+		temp    = *start;
+		*start  = *(end+i);
+		*(end+i)= temp;
+		start++;
+		i++;
+		i -= (0==i%widthFace)?widthFace*2 : 0;
 		}
 
+	//------------------------
+	// CREATE OPENGL TEXTURES
+	//------------------------
 	aTextureIds[0] = CreateTexture( data, widthFace, heightFace );
 	aTextureIds[1] = CreateTexture( data+offSet,   widthFace, heightFace );
 	aTextureIds[2] = CreateTexture( data+offSet*2, widthFace, heightFace );
@@ -969,25 +961,131 @@ TVector3* LoadPFMCubeMap( string filename, int aTextureIds[6] )
 	aTextureIds[4] = CreateTexture( data+offSet*4, widthFace, heightFace );
 	aTextureIds[5] = CreateTexture( data+offSet*5, widthFace, heightFace );
 
-	delete[] fixed;
-//	delete[] data; //Will be freed by the caller
+	printf("Created 6x%dx%d lightprobe.\n", widthFace,heightFace );
 
+//	delete[] data; //Will be freed by the caller
 //	printf("[%f, %f, %f] - 0x%X\n", data->iX,data->iY,data->iZ, data );
 	return data;
 	}
 
-
-
-GLuint LoadCubeMapTextures(
-						   const char *filename1
-						   , const char *filename2
-						   , const char *filename3
-						   , const char *filename4
-						   , const char *filename5
-						   , const char *filename6
-						   )
+//Flip faces upside-down
+void rotateFaceData( TVector3* data, int faceSize )
 	{
-	GLuint tex_id = 0;
+	TVector3* start;
+	TVector3* end;
+	TVector3 temp;
+	
+	for (int face=0;face<6;face++)
+		{
+		start = data+(face*faceSize);
+		end = start+(faceSize-1);
+
+		while (start<end)
+			{
+			temp = *start;
+			*start = *end;
+			*end = temp;
+			start++;
+			end--;
+			}
+		}	
+	}
+
+
+void swapOrder( TVector3* data, int offSet )
+	{
+	TVector3* first  = data;
+	TVector3* second = data+offSet;
+	TVector3* third  = data+offSet*2;
+	TVector3* fourth = data+offSet*3;
+	TVector3* fifth = data+offSet*4;
+	TVector3* sixth = data+offSet*5;
+	TVector3* tempVec = new TVector3[offSet];
+
+	//SWAP
+	for(int i=0;i<offSet;i++)
+		{
+		//1<->6
+		*(tempVec+i) = *(first+i);
+		*(first+i)   = *(sixth+i);
+		*(sixth+i)   = *(tempVec+i);
+
+		//2<->5
+		*(tempVec+i) = *(second+i);
+		*(second+i)  = *(fifth+i);
+		*(fifth+i)   = *(tempVec+i);
+
+		//3<->4
+		*(tempVec+i) = *(third+i);
+		*(third+i)   = *(fourth+i);
+		*(fourth+i)  = *(tempVec+i);
+		}
+	}
+
+
+void fixCenterRow( TVector3* data, int faceSize, int widthFace, int heightFace, int totalWidth )
+	{
+	//FIX center row
+	TVector3* fixer = (data+faceSize*2); //first row should be ok
+	TVector3* fixed  = new TVector3[faceSize*3];
+	TVector3* first  = fixed;
+	TVector3* second = fixed+faceSize;
+	TVector3* third  = fixed+faceSize*2;
+
+	//Get correct faces individually
+
+	//Height of the center row
+	for (int j=0;j<heightFace;j++)
+		{
+		//all the pixels in a row
+		for (int i=0; i<totalWidth;i++)
+			{
+			//Face 1
+			//			printf("%d: ",i);
+			if(i<widthFace)
+				{
+				//				printf("third");
+				*third++ = *fixer;
+				}
+			//Face 2
+			else if(i>=widthFace && i<widthFace*2)
+				{
+				//				printf("second");
+				*second++ = *fixer;
+				}
+			//Face 3
+			else
+				{
+				//				printf("first");
+				*first++ = *fixer;
+				}
+			//			printf(" (%f,%f,%f)\n",fixer->iX,fixer->iY,fixer->iZ);
+			fixer++;
+			}
+		}
+
+	//Copy the faces individually back to the data
+	first  = fixed;
+	TVector3* temp = (data+faceSize*2);
+	for( int i=0; i<faceSize*3; i++)
+		{
+		*temp++ = *first++;
+		}
+
+	delete[] fixed;
+	}
+
+
+int LoadPFMCubeMap( 
+				     const char *filename1
+				   , const char *filename2
+				   , const char *filename3
+				   , const char *filename4
+				   , const char *filename5
+				   , const char *filename6
+				   )
+	{
+	GLuint tex_id(-1);
 
 	gl_texture_t *texture1 = NULL;
 	texture1 = ReadTextureFile (filename1);
@@ -1013,78 +1111,33 @@ GLuint LoadCubeMapTextures(
 		{
 		glGenTextures(1, &texture1->id);
 		tex_id = texture1->id;
-		texture2->id = tex_id;
-		texture3->id = tex_id;
-		texture4->id = tex_id;
-		texture5->id = tex_id;
-		texture6->id = tex_id;
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
+
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT
-			, 0
-			, texture1->internalFormat
-			, texture1->width
-			, texture1->height
-			, 0
-			, texture1->format
-			, GL_UNSIGNED_BYTE
-			, texture1->texels);
-		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT
-			, 0
-			, texture2->internalFormat
-			, texture2->width
-			, texture2->height
-			, 0
-			, texture2->format
-			, GL_UNSIGNED_BYTE
-			, texture2->texels);
-		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT
-			, 0
-			, texture3->internalFormat
-			, texture3->width
-			, texture3->height
-			, 0
-			, texture3->format
-			, GL_UNSIGNED_BYTE
-			, texture3->texels);
-		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT
-			, 0
-			, texture4->internalFormat
-			, texture4->width
-			, texture4->height
-			, 0
-			, texture4->format
-			, GL_UNSIGNED_BYTE
-			, texture4->texels);
-		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT
-			, 0
-			, texture5->internalFormat
-			, texture5->width
-			, texture5->height
-			, 0
-			, texture5->format
-			, GL_UNSIGNED_BYTE
-			, texture5->texels);
-		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
-		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT
-			, 0
-			, texture6->internalFormat
-			, texture6->width
-			, texture6->height
-			, 0
-			, texture6->format
-			, GL_UNSIGNED_BYTE
-			, texture6->texels);
+		// Specify the 6 sides of the cube
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, texture1->width, texture1->height
+			, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture1->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, texture2->width, texture2->height
+			, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture2->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, texture3->width, texture3->height
+			, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture3->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, texture4->width, texture4->height
+			, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture4->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, texture5->width, texture5->height
+			, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture5->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, texture6->width, texture6->height
+			, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture6->texels);
+
+		glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_NORMAL_MAP);
+		glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_NORMAL_MAP);
+		glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_NORMAL_MAP); 
 
 		/* OpenGL has its own copy of texture data */
 		free (texture1->texels);
@@ -1099,6 +1152,92 @@ GLuint LoadCubeMapTextures(
 		free (texture5);
 		free (texture6->texels);
 		free (texture6);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		}
+
+	return tex_id;
+	}
+
+
+
+GLuint LoadCubeMapTextures(
+						     const char *filename1
+						   , const char *filename2
+						   , const char *filename3
+						   , const char *filename4
+						   , const char *filename5
+						   , const char *filename6
+						   )
+	{
+	GLuint tex_id(-1);
+
+	gl_texture_t *texture1 = NULL;
+	texture1 = ReadTextureFile (filename1);
+	gl_texture_t *texture2 = NULL;
+	texture2 = ReadTextureFile (filename2);
+	gl_texture_t *texture3 = NULL;
+	texture3 = ReadTextureFile (filename3);
+	gl_texture_t *texture4 = NULL;
+	texture4 = ReadTextureFile (filename4);
+	gl_texture_t *texture5 = NULL;
+	texture5 = ReadTextureFile (filename5);
+	gl_texture_t *texture6 = NULL;
+	texture6 = ReadTextureFile (filename6);
+
+	if(
+		(texture1 && texture1->texels)
+		&&(texture2 && texture2->texels)
+		&&(texture3 && texture3->texels)
+		&&(texture4 && texture4->texels)
+		&&(texture5 && texture5->texels)
+		&&(texture6 && texture6->texels)
+		)
+		{
+		glGenTextures(1, &texture1->id);
+		tex_id = texture1->id;
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP,tex_id);
+
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+		GLenum type = GL_UNSIGNED_BYTE;
+		// Specify the 6 sides of the cube
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, texture1->internalFormat, texture1->width, texture1->height
+			, 0, texture1->format, GL_UNSIGNED_BYTE, texture1->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, texture2->internalFormat, texture2->width, texture2->height
+			, 0, texture2->format, GL_UNSIGNED_BYTE, texture2->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, texture3->internalFormat, texture3->width, texture3->height
+			, 0, texture3->format, GL_UNSIGNED_BYTE, texture3->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, texture4->internalFormat, texture4->width, texture4->height
+			, 0, texture4->format, GL_UNSIGNED_BYTE, texture4->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, texture5->internalFormat, texture5->width, texture5->height
+			, 0, texture5->format, GL_UNSIGNED_BYTE, texture5->texels);
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, texture6->internalFormat, texture6->width, texture6->height
+			, 0, texture6->format, GL_UNSIGNED_BYTE, texture6->texels);
+
+		glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_NORMAL_MAP);
+		glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_NORMAL_MAP);
+		glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_NORMAL_MAP); 
+
+		/* OpenGL has its own copy of texture data */
+		free (texture1->texels);
+		free (texture1);
+		free (texture2->texels);
+		free (texture2);
+		free (texture3->texels);
+		free (texture3);
+		free (texture4->texels);
+		free (texture4);
+		free (texture5->texels);
+		free (texture5);
+		free (texture6->texels);
+		free (texture6);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		}
 
 	return tex_id;

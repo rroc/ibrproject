@@ -96,8 +96,13 @@ GLuint CreateTexture( float* data, int width, int height );
 GLuint CreateTexture( TVector3* data, int width, int height );
 
 GLuint LoadCubeMapTextures( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
+int LoadPFMCubeMap( const char* filename1, const char* filename2, const char* filename3, const char* filename4, const char* filename5, const char* filename6);
 
-GLuint LoadPFMTexture( string filename );
-TVector3* LoadPFMCubeMap( string filename, int aTextureIds[6] );
+TVector3* LoadPFMTexture( string filename );
+TVector3* LoadBasicPFMCubeMap( string filename, int aTextureIds[6] );
+
+void swapOrder( TVector3* data, int offSet );
+void fixCenterRow( TVector3* data, int faceSize, int widthFace, int heightFace, int totalWidth );
+void rotateFaceData( TVector3* data, int faceSize );
 
 #endif

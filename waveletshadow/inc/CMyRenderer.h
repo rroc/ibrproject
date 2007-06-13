@@ -57,12 +57,11 @@ class CMyRenderer
 		///Resize the rendering window
 		void ResizeScene(const int aWidth, const int aHeight);
 
-		///Rotate lightcoefficients
-		void RotateLights( float aChangeTheta, float aChangePhi );
-
 		void UpdateScene();
 
 		void ChangeVertexMap();
+		void ChangeProbeMap();
+
 		void DecomposeLightProbeMap();
 
 
@@ -87,8 +86,11 @@ class CMyRenderer
 		void ActivateDecomposition();
 		void ActivateReconstruction();
 
-		void RotatingStarted();
-		void RotatingFinished( float aSpeed );
+		void ObjectRotatingEvent();
+		void LightRotatingEvent();
+
+		TVector3 CubeToVector( int aCube, float aU, float aV );
+		TVector3 VectorToCube(const TVector3& aVector);
 
 	//PRIVATE FUNCTIONS
 	//------------------
@@ -104,7 +106,8 @@ class CMyRenderer
 		void CreateScene();
 		void LoadTextures();
 
-		void ApplyRotations();
+		void ApplyObjectRotations();
+		void ApplyLightRotations();
 
 		void RenderObject(CMesh* aMesh);
 		void DrawTriangle( TVector3* aVx, TVector3* aNv, TColorRGBA aCol[3]);
@@ -112,8 +115,8 @@ class CMyRenderer
 		void DrawCubemap();
 
 		//per Vertex cubemap
-		void DrawMap();
-		void DrawProbe();
+		void DrawVertexVisibilityMap();
+		void DrawLightProbe();
 
 		float* DecomposeVisibility();
 		float* DecomposeVisibility(int aVertexIndex);
@@ -142,12 +145,22 @@ class CMyRenderer
 		void SavePRTWaveletData();
 
 		void TransformMesh( CMesh* aMesh );
-		void MultMatrixVect(const double aMatrix[16], TVector3* aVector);
+
+		void ApplyMultMatrixVect(const double* aMatrix, TVector3* aVector);
+		TVector3 MultMatrixVect(const float* aMatrix, const TVector3& aVector);
 
 		bool IsRayBlocked( CRay* aRay );
 		void ShowFPS();
 
+		void ShowLightDirection();
+
 		int InitializeSamplingData();
+		void CalculateTransformedLightProbe();
+
+		//TVector3 CubeToVector( int aCube, float aU, float aV );
+		//TVector3 VectorToCube(const TVector3& aVector);
+
+		void InverseMatrix( float aMatrix[4][4]) const;
 
 	//PUBLIC STATIC DATA
 	//------------------
@@ -155,12 +168,13 @@ class CMyRenderer
 		/// A static pointer to the current renderer object.
 		/// This is used to be able to pass rendering method to OpenGL.
 		static CMyRenderer* iCurrentRenderer;
-		CSceneRotation* iSceneRotation;
-		TVector3 iRotationAnimation;
+		CSceneRotation*		iSceneRotation;
 
-		TVector3	iRotationAxis;
-		float		iRotationAngle;
-		float		iRotationAngleChange;
+		TVector3	iObjectRotationAxis;
+		float		iObjectRotationAngle;
+
+		TVector3	iLightRotationAxis;
+		float		iLightRotationAngle;
 
 		GLenum iWireFrame;
 
@@ -169,18 +183,24 @@ class CMyRenderer
 	//PRIVATE DATA
 	//------------------
 	private:
-		bool iRotationFinished;
 
-		float iRotationXForm[16];
+		bool  iObjectRotationFinished;
+		float iObjectRotationXForm[4][4];
+		float iObjectRotationXFormInv[4][4];
+		float iObjectRotationAngleChange;
+
+		float iLightRotationXForm[4][4];
+		float iLightRotationXFormInv[4][4];
 
 		int iScreenHeight;	//< The height of the screen
 		int iScreenWidth;	//< The width of the screen
 
-		vector<int> iTextures;
 		int iVertexMapTextures[6];
 		int iProbeMapTextures[6];
 
 		TVector3* iLightProbe;
+		TVector3* iTransformedLightProbe;
+		int		  iCubeTexture;
 
 		CSceneNode* iScene;
 		vector<CMesh*> iMeshList;
@@ -197,6 +217,7 @@ class CMyRenderer
 
 		//The sampling vectors for raytracing
 		vector<TVector3>			iSampleData;
+		int			iNumberOfSamples;
 
 		//FPS
 		int			iFrame;

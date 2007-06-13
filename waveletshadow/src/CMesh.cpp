@@ -6,6 +6,8 @@
 CMesh::CMesh()
 	: iName("noname")
 	, iMaterialColor( 1.0, 1.0, 1.0, 1.0 )
+	, iNumTriangles(0)
+	, iNumVertices(0)
 	{
 	//empty on purpose
 	}
@@ -22,6 +24,8 @@ CMesh::CMesh( const CMesh& aMesh )
 	iFaceNormals = aMesh.iFaceNormals;
 	iVertexNormals = aMesh.iVertexNormals;
 	iFaceColors = aMesh.iFaceColors;
+	iNumTriangles = aMesh.iNumTriangles;
+	iNumVertices = aMesh.iNumVertices;
 	}
 
 // **** Destructor
@@ -38,6 +42,8 @@ void CMesh::clearMesh()
 	iFaceNormals.clear();
 	iVertexNormals.clear();
 	iFaceColors.clear();
+	iNumVertices=0;
+	iNumTriangles=0;
 	}
 
 /** \brief Method that calculate the face normal
@@ -56,7 +62,7 @@ void CMesh::calculateFaceNormals()
 	this->iFaceNormals.clear();
 
 	TVector3 vx1, vx2, vx3;
-	for( int i=0, j=static_cast<int>(iTriangles.size()); i<j; i++)
+	for( int i=0, j=static_cast<int>(iNumTriangles); i<j; i++)
 		{
 		//get points
 		vx1 = this->iVertices.at( (this->iTriangles.at( i ).iV1) );
@@ -89,12 +95,12 @@ void CMesh::calculateVertexNormals()
 		}
 
 	vector< pair<TVector3,int> > anl; //Added Normals List
-	anl.resize( iVertices.size(), make_pair<TVector3,int>( TVector3(), 0) );
+	anl.resize( iNumVertices, make_pair<TVector3,int>( TVector3(), 0) );
 
 	int a,b,c;
 	std::pair<TVector3,int> av1, av2, av3;
 
-	for( int i=0, j=static_cast<int>(iTriangles.size()); i<j; i++)
+	for( int i=0, j=static_cast<int>(iNumTriangles); i<j; i++)
 		{
 		//get vertex indices for current triangle
 		a=this->iTriangles.at(i).iV1;
@@ -181,10 +187,20 @@ void CMesh::setSolidColor(float aR, float aG, float aB)
 		this->iFaceColors.clear();
 		}
 	TColorRGBA c(aR,aG,aB);
-	for(int i = 0; i < static_cast<int>(this->iTriangles.size()); i++)
+	for(int i = 0; i < static_cast<int>(iNumTriangles); i++)
 		{
 		this->iFaceColors.push_back(c);
 		}
 	}
 
+void CMesh::addVertex( TVector3 aVertex )
+	{
+	this->iVertices.push_back( aVertex );
+	this->iNumVertices++;
+	}
 
+void CMesh::addTriangle( TTriangle aTriangle )
+	{
+	this->iTriangles.push_back( aTriangle );
+	this->iNumTriangles++;
+	}

@@ -51,13 +51,17 @@ class TVector3
 
 		//assignments
 		TVector3& operator+=( const TVector3& aV ){ iX+=aV.iX; iY+=aV.iY; iZ+=aV.iZ; return *this; };
+		TVector3& operator+=( float aVal ){ iX+=aVal; iY+=aVal; iZ+=aVal; return *this; };
 		TVector3& operator-=( const TVector3& aV ){ iX-=aV.iX; iY-=aV.iY; iZ-=aV.iZ; return *this; };
+		TVector3& operator-=( float aVal ){ iX-=aVal; iY-=aVal; iZ-=aVal; return *this; };
 		TVector3& operator*=( float aVal ){ iX*=aVal; iY*=aVal; iZ*=aVal; return *this; };
 		TVector3& operator/=( float aVal ){ iX/=aVal; iY/=aVal; iZ/=aVal; return *this; };
 
 		//math operators
 		TVector3 operator+( const TVector3& aV2 ) { return TVector3(*this)+=aV2; };
+		TVector3 operator+( float aVal ) { return TVector3(*this)+=aVal; };
 		TVector3 operator-( const TVector3& aV2 ) { return TVector3(*this)-=aV2; };
+		TVector3 operator-( float aVal ) { return TVector3(*this)-=aVal; };
 		TVector3 operator*( float aVal ) { return TVector3(*this)*=aVal; };
 		TVector3 operator/( float aVal ) { return TVector3(*this)/=aVal; };
 

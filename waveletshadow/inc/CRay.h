@@ -12,8 +12,8 @@ class CRay
 		~CRay();
 
 		void Set(TVector3 aStart, TVector3 aDirection);
-		bool IntersectTriangle( TVector3* aTriangle[3] );
-		bool IntersectTriangle2( TVector3* aTriangle[3], TVector3* aPlaneNormal ) ;
+		//bool IntersectTriangle( TVector3* aTriangle[3] );
+		bool IntersectTriangle( TVector3* aTriangle[3], TVector3* aPlaneNormal ) ;
 		bool IntersectBoundingBoxAABB( TVector3 *aMin, TVector3 *aMax );
 
 	public:

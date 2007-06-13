@@ -95,7 +95,13 @@ CMesh* CObjLoader::GetMesh( int aIndex, float aScale )
 	printf("- Mesh Color: (%f, %f, %f, %f)\n", mesh->iMaterialColor.iR, mesh->iMaterialColor.iG, mesh->iMaterialColor.iB, mesh->iMaterialColor.iA );
 	printf("- Copy vertices:             ");
 	TVector3 vectorData;
-//	printf("\n");
+
+	if ( 0 == iObj->iVertexArray.size() )
+		{
+		printf("\n\nUnsupported .obj file\n");
+		exit(-1);
+		}
+
 	TVector3 objMin( iObj->iVertexArray[0].X, iObj->iVertexArray[0].Y, iObj->iVertexArray[0].Z );
 	TVector3 objMax( iObj->iVertexArray[0].X, iObj->iVertexArray[0].Y, iObj->iVertexArray[0].Z );
 	for( int i=0, j=iObj->iNumVertex; i<j; i++)
@@ -111,7 +117,7 @@ CMesh* CObjLoader::GetMesh( int aIndex, float aScale )
 			,iObj->iVertexArray[i].Y * aScale
 			,iObj->iVertexArray[i].Z * aScale
 			);
-		mesh->iVertices.push_back( vectorData );
+		mesh->addVertex( vectorData );
 
 		//Mins and Maxs
 		if( objMin.iX > vectorData.iX ) objMin.iX = vectorData.iX;
@@ -175,7 +181,7 @@ CMesh* CObjLoader::GetMesh( int aIndex, float aScale )
 			{
 //			printf("d1(%d)",v1);
 			//this vertex has to be duplicated, and another normal added
-			mesh->iVertices.push_back( mesh->iVertices.at(v1) );
+			mesh->addVertex( mesh->iVertices.at(v1) );
 			v1 = ( mesh->iVertices.size() - 1 );
 			mesh->iVertexNormals.push_back( vectorData );
 			verticesAdded++;
@@ -196,7 +202,7 @@ CMesh* CObjLoader::GetMesh( int aIndex, float aScale )
 			{
 //			printf("d2(%d)",v2);
 			//this vertex has to be duplicated, and another normal added
-			mesh->iVertices.push_back( mesh->iVertices.at(v2) );
+			mesh->addVertex( mesh->iVertices.at(v2) );
 			v2 = ( mesh->iVertices.size() - 1 );
 			mesh->iVertexNormals.push_back( vectorData );
 			verticesAdded++;
@@ -217,7 +223,7 @@ CMesh* CObjLoader::GetMesh( int aIndex, float aScale )
 			{
 //			printf("d3(%d)",v3);
 			//this vertex has to be duplicated, and another normal added
-			mesh->iVertices.push_back( mesh->iVertices.at(v3) );
+			mesh->addVertex( mesh->iVertices.at(v3) );
 			v3 = ( mesh->iVertices.size() - 1 );
 			mesh->iVertexNormals.push_back( vectorData );
 			verticesAdded++;
@@ -227,7 +233,7 @@ CMesh* CObjLoader::GetMesh( int aIndex, float aScale )
 			mesh->iVertexNormals.at( v3 ).set( vectorData );
 			}
 
-		mesh->iTriangles.push_back( TTriangle( v1, v2, v3 ) );
+		mesh->addTriangle( TTriangle( v1, v2, v3 ) );
 //		printf("\nT: v[%d, %d, %d] n[%d, %d, %d]\n", v1, v2, v3, n1, n2, n3 );
 		}
 
