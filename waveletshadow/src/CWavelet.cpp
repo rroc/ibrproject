@@ -2,6 +2,8 @@
 
 #include "CWavelet.h"
 
+static const float K1BySqrt2( 1.0f / sqrt(2.0) );
+
 CWavelet::CWavelet( CMatrixNoColors* aMatrix ,int aRows, int aCols)
 {
 	iWaveletNoColors = aMatrix;
@@ -43,8 +45,8 @@ CMatrix* CWavelet::nonStandardDeconstructionStep(CMatrix *aMatrix)
 	//printf("\n decomposing the cropped.....\n result is \n");
 	for(int i=0; i<limit;i++)
 	{
-		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
-		temp->iMatrix.at(0).at(limit+i) = ( aMatrix->iMatrix.at(0).at(2*i) - aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
+		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) * K1BySqrt2;
+		temp->iMatrix.at(0).at(limit+i) = ( aMatrix->iMatrix.at(0).at(2*i) - aMatrix->iMatrix.at(0).at(2*i+1) ) * K1BySqrt2;
 	}
 	aMatrix->~CMatrix();
 
@@ -73,14 +75,14 @@ CMatrix* CWavelet::nonStandardReconstructionStep(CMatrix *aMatrix)
 CMatrixNoColors* CWavelet::nonStandardDeconstructionStep(CMatrixNoColors *aMatrix)
 {
 	CMatrixNoColors *temp= new CMatrixNoColors(aMatrix->iRows,aMatrix->iCols);
-	int limit=aMatrix->iCols/2;
+	int limit = aMatrix->iCols/2;
 	//printf("\nlimit=%d, iCols=%d",limit,aMatrix->iCols);
 
 	//printf("\n decomposing the cropped.....\n result is \n");
 	for(int i=0; i<limit;i++)
 	{
-		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
-		temp->iMatrix.at(0).at(limit+i) = ( aMatrix->iMatrix.at(0).at(2*i) - aMatrix->iMatrix.at(0).at(2*i+1) ) / (sqrt(2.0));
+		temp->iMatrix.at(0).at(i)       = ( aMatrix->iMatrix.at(0).at(2*i) + aMatrix->iMatrix.at(0).at(2*i+1) ) * K1BySqrt2;
+		temp->iMatrix.at(0).at(limit+i) = ( aMatrix->iMatrix.at(0).at(2*i) - aMatrix->iMatrix.at(0).at(2*i+1) ) * K1BySqrt2;
 	}
 	aMatrix->~CMatrixNoColors();
 
@@ -279,7 +281,11 @@ void CWavelet::standardDeconstruction()
 {
 	if (withColors)
 	{
-		iWavelet->operator /(sqrt(iCols*1.0));
+#ifdef _DEBUG
+		printf("Cscale: %d\n", iCols);
+#endif // _DEBUG
+
+		*iWavelet/(sqrt((float)iCols));
 		for (int row=0;row<iRows;row++)
 		{
 			int columns=iCols;
@@ -295,7 +301,10 @@ void CWavelet::standardDeconstruction()
 	}
 	else
 	{
-		iWaveletNoColors->operator /(sqrt(iCols*1.0));
+#ifdef _DEBUG
+		printf("NCscale: %d\n", iCols);
+#endif // _DEBUG
+		*iWaveletNoColors / (sqrt((float)iCols));
 		for (int row=0;row<iRows;row++)
 		{
 			int columns=iCols;
@@ -331,7 +340,7 @@ void CWavelet::standardReconstruction()
 			}
 		}
 		float temp=sqrt((float)iCols);
-		iWavelet->operator * ( temp );
+		*iWavelet * temp;
 	} 
 	else
 	{
@@ -347,7 +356,7 @@ void CWavelet::standardReconstruction()
 		}
 	}
 	float temp=sqrt((float)iCols);
-	iWaveletNoColors->operator * ( temp );
+	*iWaveletNoColors * temp;
 	}
 	decomposed=false;
 	recomposed=true;
