@@ -14,12 +14,12 @@ CMyUiEvents* CMyUiEvents::iCurrentUi = 0;
 
 //Constructor, saves a pointer to the renderer
 CMyUiEvents::CMyUiEvents( CMyRenderer* aRenderer )
-	: iRenderer( aRenderer )
-	, iScreenSize( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT), 0)
-	, iPreviousRotationPoint(0,0,0)
-	, iPreviousZoomPoint(0,0,0)
-	, iCurrentRotationPoint(0,0,0)
-	, iCurrentZoomPoint(0,0,0)
+: iRenderer( aRenderer )
+, iScreenSize( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT), 0)
+, iPreviousObjectRotationPoint(0,0,0)
+, iPreviousZoomPoint(0,0,0)
+, iCurrentObjectRotationPoint(0,0,0)
+, iCurrentZoomPoint(0,0,0)
 	{
 	}
 
@@ -30,19 +30,18 @@ CMyUiEvents::~CMyUiEvents()
 
 //Used to handle the keyboard input (ASCII Characters)
 void CMyUiEvents::ProcessNormalKeys(  unsigned char key, TVector3 aPoint  )
-{
-    switch (key)
+	{
+	switch (key)
 		{
 		//ESC
 		case 27:
 			exit(0);
 			break;
-		//SPACE
+			//SPACE
 		case 32 :
-			iRenderer->RotatingStarted();
-			iRenderer->RotatingFinished(0.0);
+//			iRenderer->ObjectRotatingEvent();
 			break;
-		//ENTER
+			//ENTER
 		case 13:
 			iRenderer->ChangeVertexMap();
 			break;
@@ -52,7 +51,7 @@ void CMyUiEvents::ProcessNormalKeys(  unsigned char key, TVector3 aPoint  )
 			break;
 		case 'r':
 		case 'R':
-			 iRenderer->ActivateReconstruction();
+			iRenderer->ActivateReconstruction();
 			break;
 		case 'w':
 		case 'W':
@@ -65,7 +64,7 @@ void CMyUiEvents::ProcessNormalKeys(  unsigned char key, TVector3 aPoint  )
 				iRenderer->iWireFrame = GL_TRIANGLES;
 				}			
 			break;
-		//undefined key
+			//undefined key
 		default:
 			break;
 		}
@@ -73,33 +72,39 @@ void CMyUiEvents::ProcessNormalKeys(  unsigned char key, TVector3 aPoint  )
 
 // Used to handle the keyboard input (not ASCII Characters)
 void CMyUiEvents::ProcessCursorKeys(  int key, TVector3 aPoint  )
-{
+	{
 	}
 
 void CMyUiEvents::ProcessMouseEvent(  int button, int state, TVector3 aPoint  )
-{
+	{
 	switch (button)
 		{
 		case GLUT_LEFT_BUTTON:
+			//MOUSE DOWN
 			if(GLUT_DOWN == state)
-				{
-				iMouseButtonDown = EMouseDownLeft;
-				iRenderer->RotatingStarted();
-				iPreviousRotationPoint = trackBall( aPoint );
+				{		
+				//MOVE LIGHT PROBE
+				if( GLUT_ACTIVE_CTRL == glutGetModifiers())
+					{
+					iMouseButtonDown = EMouseCTRLDownLeft;
+					iPreviousLightRotationPoint = trackBall( aPoint );
+					}
+				//MOVE SCENE
+				else
+					{
+					iMouseButtonDown = EMouseDownLeft;
+					iPreviousObjectRotationPoint = trackBall( aPoint );
+					}
 				}
+
+			//MOUSE UP
 			else
 				{
 				iMouseButtonDown = EMouseUpLeft;
-				if( iSpeed > 0.0001 ) // If little movement - do nothing.
-					{
-					//iMousePoint = trackBall( aPoint );
-					//iSpeed = ( 0.000000001 < ( iCurrentPoint - iMousePoint ).length())? iSpeed: 0.0;
-
-					iRenderer->RotatingFinished( iSpeed );
-					}
 				}
 			break;
 
+			//ZOOM
 		case GLUT_RIGHT_BUTTON:
 			if(GLUT_DOWN == state)
 				{
@@ -114,58 +119,67 @@ void CMyUiEvents::ProcessMouseEvent(  int button, int state, TVector3 aPoint  )
 		default:
 			break;
 		}
-
 	}
 
 void CMyUiEvents::ProcessMouseMotionEvent(  TVector3 aPoint  )
-{
+	{
+	//ROTATE SCENE
 	if( EMouseDownLeft == iMouseButtonDown)
+		{
+		iCurrentObjectRotationPoint = trackBall( aPoint );
+		TVector3 direction = iCurrentObjectRotationPoint - iPreviousObjectRotationPoint;
+		iObjectRotationSpeed = direction.length();
+		if( iObjectRotationSpeed > 0.0001 ) // If little movement - do nothing.
 			{
-			iCurrentRotationPoint = trackBall( aPoint );
-
-			TVector3 direction = iCurrentRotationPoint - iPreviousRotationPoint;
-			iSpeed = direction.length();
-			if( iSpeed > 0.0001 ) // If little movement - do nothing.
-				{
-				iRenderer->iRotationAxis  = iPreviousRotationPoint.cross( iCurrentRotationPoint );
-				iRenderer->iRotationAngle = iSpeed * 50.0f;
-
-				iRenderer->iRotationAxis = iRenderer->iRotationAxis.normalize();
-				}
+			iRenderer->iObjectRotationAngle = iObjectRotationSpeed * 15.0f;
+			iRenderer->iObjectRotationAxis = (iPreviousObjectRotationPoint.cross( iCurrentObjectRotationPoint )).normalize();
+			iRenderer->ObjectRotatingEvent();
 			}
+		}
+	//ROTATE LIGHT
+	else if ( EMouseCTRLDownLeft == iMouseButtonDown )
+		{
+		iCurrentLightRotationPoint = trackBall( aPoint );
+		TVector3 direction = iCurrentLightRotationPoint - iPreviousLightRotationPoint;
+		iLightRotationSpeed = direction.length();
+		if( iLightRotationSpeed > 0.0001 ) // If little movement - do nothing.
+			{
+			iRenderer->iLightRotationAngle = iLightRotationSpeed * 15.0f;
+			iRenderer->iLightRotationAxis = (iPreviousLightRotationPoint.cross( -iCurrentLightRotationPoint )).normalize();
+			iRenderer->LightRotatingEvent();
+			}
+		}
+	//ZOOM
 	else if( EMouseDownRight == iMouseButtonDown)
+		{
+		int diff = aPoint.iY - iPreviousZoomPoint.iY;
+		float zoomFactor = diff * 0.01f;
+		float sum = iRenderer->iScale + zoomFactor;
+
+		//check range
+		if(sum<0.6f)
 			{
-			int diff = aPoint.iY - iPreviousZoomPoint.iY;
-			float zoomFactor = diff * 0.01f;
-			float sum = iRenderer->iScale + zoomFactor;
-
-			//printf("%f -> %f\n", zoomFactor, iRenderer->iScale);
-
-			//check range
-			if(sum<0.6f)
-				{
-				iRenderer->iScale = 0.6f;
-				}
-			else if(sum>2.5f)
-				{
-				iRenderer->iScale = 2.5f;
-				}
-			else
-				{
-				iRenderer->iScale = sum;
-				}
-			iPreviousZoomPoint = aPoint;
+			iRenderer->iScale = 0.6f;
 			}
-
+		else if(sum>2.7f)
+			{
+			iRenderer->iScale = 2.5f;
+			}
+		else
+			{
+			iRenderer->iScale = sum;
+			}
+		iPreviousZoomPoint = aPoint;
+		}
 	}
 
 TVector3 CMyUiEvents::trackBall( TVector3 aPoint )
 	{
 	TVector3 trackBallPoint( 
-				  ( 2.0f*aPoint.iX - iScreenSize.iX ) / iScreenSize.iX
-				, ( 2.0f*aPoint.iY - iScreenSize.iY ) / iScreenSize.iY
-				, 0.0
-				);
+		( 2.0f*aPoint.iX - iScreenSize.iX ) / iScreenSize.iX
+		, ( 2.0f*aPoint.iY - iScreenSize.iY ) / iScreenSize.iY
+		, 0.0
+		);
 
 	float d = trackBallPoint.length();
 	d = (d<1.0f)? d : 1.0f;

@@ -75,7 +75,7 @@ void CBall::init( int aRowSize, float aScale )
 			z = cos(j) * size;
 
 			vertex.set( x*aScale, y*aScale, z*aScale );
-			this->iVertices.push_back(vertex);
+			this->addVertex(vertex);
 			}
 		}
 
@@ -132,7 +132,7 @@ void CBall::init( int aRowSize, float aScale )
 								, v3
 								, v2
 								);
-			this->iTriangles.push_back(triangle);
+			this->addTriangle(triangle);
 			}
 		//CREATE THE LOWER TRIANGLE
 		if( 0 != v1 ) // <-(if not the start of ball)
@@ -149,7 +149,7 @@ void CBall::init( int aRowSize, float aScale )
 								);
 
 
-			this->iTriangles.push_back( triangle2 );
+			this->addTriangle( triangle2 );
 			}
 		}
 	}

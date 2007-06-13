@@ -31,12 +31,12 @@ class TSquare
 
 
 #ifndef M_PI
-#define M_PI        3.14159265358979323846
+static const float M_PI        (3.14159265358979323846);
 #endif
 
-#define TWOPI M_PI*2.0
-#define FOURPI M_PI*4.0
-#define KDegreeToRadian M_PI/180.0
+static const float  TWOPI (M_PI*2.0);
+static const float  FOURPI (M_PI*4.0);
+static const float  KDegreeToRadian (M_PI/180.0);
 
 #define USE_OPENMP
-//#define USE_FP_TEXTURES
+#define USE_FP_TEXTURES

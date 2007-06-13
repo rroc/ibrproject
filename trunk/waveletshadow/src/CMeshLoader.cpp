@@ -426,7 +426,7 @@ CMesh* CMeshLoader::GetMesh( int aIndex )
 						,( *iDataInfo->iMeshes[aIndex].iVertices+(i*3) )[1]
 						,( *iDataInfo->iMeshes[aIndex].iVertices+(i*3) )[2]
 						);
-		mesh->iVertices.push_back( vectorData );
+		mesh->addVertex( vectorData );
 
 		//normals
 		vectorData.set(   ( *iDataInfo->iMeshes[aIndex].iNormals+(i*3) )[0]
@@ -441,7 +441,7 @@ CMesh* CMeshLoader::GetMesh( int aIndex )
 	for( int i=0, j=iDataInfo->iMeshes[aIndex].iTriCount; i<j; i++ )
 		{
 		printf("\b\b\b\b\b\b\b\b%8d", i+1 );
-		mesh->iTriangles.push_back( TTriangle(
+		mesh->addTriangle( TTriangle(
 			  ( *iDataInfo->iMeshes[aIndex].iTriangles+(i*3) )[0] 
 			, ( *iDataInfo->iMeshes[aIndex].iTriangles+(i*3) )[1]
 			, ( *iDataInfo->iMeshes[aIndex].iTriangles+(i*3) )[2] )

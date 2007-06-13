@@ -122,7 +122,7 @@ void CWavelet::nonStandardDeconstruction()
 		//iWavelet->print();
 
 
-		while (g>=17)
+		while (g>=2)
 		{
 			for(int row=0;row<g; row++)
 			{

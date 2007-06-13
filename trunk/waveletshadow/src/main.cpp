@@ -84,7 +84,6 @@ int main(int argc, char **argv)
 	CMyUiEvents::iCurrentUi = ui;
 
 	glutFullScreen();
-
 	glutMainLoop();
 	return 0;
 	}

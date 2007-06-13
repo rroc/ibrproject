@@ -40,21 +40,26 @@ class CMyUiEvents
 			EMouseUpLeft = 0,
 			EMouseUpRight,
 			EMouseDownLeft,
+			EMouseCTRLDownLeft,
 			EMouseDownRight
 			};
 
 		CMyRenderer* iRenderer;
 		TMouseDownStatus iMouseButtonDown;
 		
-		TVector3 iPreviousRotationPoint;
-		TVector3 iCurrentRotationPoint;
+		TVector3 iPreviousObjectRotationPoint;
+		TVector3 iCurrentObjectRotationPoint;
+		float	 iObjectRotationSpeed;
+
+		TVector3 iPreviousLightRotationPoint;
+		TVector3 iCurrentLightRotationPoint;
+		float	 iLightRotationSpeed;
 
 		TVector3 iPreviousZoomPoint;
 		TVector3 iCurrentZoomPoint;
 
 		TVector3 iScreenSize;
 
-		float iSpeed;
 	};
 
 extern void ProcessNormalKeysWithUi( unsigned char key, int x, int y );
