@@ -119,7 +119,7 @@ class CMyRenderer
 		void DrawLightProbe();
 
 		float* DecomposeVisibility();
-		float* DecomposeVisibility(int aVertexIndex);
+		float* DecomposeVisibility(int aObject, int aVertexIndex);
 
 
 		//float* ReconstructVisibility();

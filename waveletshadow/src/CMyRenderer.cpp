@@ -799,21 +799,23 @@ void CMyRenderer::ChangeVertexMap()
 
 float* CMyRenderer::DecomposeVisibility()
 	{
-	return DecomposeVisibility( iCubeMapVertex );
+	return DecomposeVisibility( 0, iCubeMapVertex );
 	}
 
-float* CMyRenderer::DecomposeVisibility( int aVertexIndex )
+float* CMyRenderer::DecomposeVisibility(int aObject, int aVertexIndex )
 	{
-	float* data = reinterpret_cast<float*>( &iSceneGraph.at(0)->iVisibilityCoefficients.at(aVertexIndex).at(0));
+#ifdef _DEBUG
+	printf("Visibility %d ", aVertexIndex ) ;
+#endif // _DEBUG
+	float* data = reinterpret_cast<float*>( &iSceneGraph.at(aObject)->iVisibilityCoefficients.at(aVertexIndex).at(0));
 	float *totaldata;
 	float *FaceData[6];
-
 
 	CMatrixNoColors *matrix1;
 	CWavelet		*wavelet1;
 	for (int i=0;i<6;i++)
 		{
-		matrix1= new CMatrixNoColors(data+KSamplingFaceCoefficients,KSamplingResolution,KSamplingResolution);
+		matrix1= new CMatrixNoColors(data+KSamplingFaceCoefficients*i,KSamplingResolution,KSamplingResolution);
 		wavelet1=new CWavelet(matrix1,KSamplingResolution,KSamplingResolution);
 //		wavelet1->nonStandardDeconstruction();
 		wavelet1->standardDeconstruction();
@@ -836,7 +838,10 @@ float* CMyRenderer::DecomposeVisibility( int aVertexIndex )
 			index++;
 			}
 		}
-	printf("Copied %d values. [first:%f, last:%f]\n", index, *ptr, *(ptr+(index-1)) ) ;
+//	printf("Copied %d values. [first:%f, last:%f]\n", index, *ptr, *(ptr+(index-1)) ) ;
+#ifdef _DEBUG
+	printf("...done\n") ;
+#endif // _DEBUG
 
 	delete[] FaceData[0];
 	delete[] FaceData[1];
@@ -1156,7 +1161,8 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 		PreCalculateDirectLight();
 		InitVertexMap();
 		InitHashTables();
-		//InitWaveletHash();
+		
+		InitWaveletHash();
 
 		//SavePRTData();
 		//SavePRTHashData();
@@ -2297,9 +2303,13 @@ void CMyRenderer::InitWaveletHash()
 
 		for( int vertex=0;vertex<numberOfVertices; vertex++)
 			{
-			float *faces=DecomposeVisibility(vertex); 
+#ifdef _DEBUG
+			printf("Object: %d, ", object );
+#endif // _DEBUG
+			float *faces=DecomposeVisibility(object, vertex); 
+			iSceneGraph.at(object)->iWaveletHash.at(vertex).clear();
 
-			for(int coefficient=0; coefficient<KSamplingTotalCoefficients; coefficient++)
+			for(int coefficient=0; coefficient < KSamplingTotalCoefficients; coefficient++)
 				{
 				float value= *(faces+coefficient);
 				//store the non-empty
