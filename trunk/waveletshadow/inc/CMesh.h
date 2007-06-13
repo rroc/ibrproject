@@ -62,6 +62,5 @@ class CMesh {
 		vector< vector<float> >	iVisibilityCoefficients;
 		vector< TIntHashTable >	iVisibilityHash;
 		vector< TIntHashTable > iWaveletHash;
-
 		int iTextureId;
 	};

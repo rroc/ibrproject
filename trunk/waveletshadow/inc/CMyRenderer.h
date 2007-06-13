@@ -12,6 +12,7 @@
 #include "CSceneMesh.h"
 #include "CSceneRotation.h"
 #include "CSceneTranslation.h"
+#include "THashtable.h"
 
 #include "CRay.h"
 
@@ -63,6 +64,7 @@ class CMyRenderer
 		void ChangeProbeMap();
 
 		void DecomposeLightProbeMap();
+		float * DecomposeLightProbe();
 
 
 
@@ -120,6 +122,7 @@ class CMyRenderer
 
 		float* DecomposeVisibility();
 		float* DecomposeVisibility(int aObject, int aVertexIndex);
+		void LightProbeWaveletHash();
 
 
 		//float* ReconstructVisibility();
@@ -199,6 +202,7 @@ class CMyRenderer
 		int iProbeMapTextures[6];
 
 		TVector3* iLightProbe;
+		TIntColorHashTable iLightProbeWaveletHash;
 		TVector3* iTransformedLightProbe;
 		int		  iCubeTexture;
 
