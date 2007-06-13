@@ -6,6 +6,7 @@
 #include <stdio.h>      /* defines printf for tests */
 #include <time.h>       /* defines time_t for timings in the test */
 #include "stdint.h"     /* defines uint32_t etc */
+#include "TVector3.h"
 
 //
 //hash_map::begin
@@ -693,3 +694,4 @@ class TSquareHasher : public stdext::hash_compare <TSquare>
 
 typedef stdext::hash_map<TSquare, float, TSquareHasher> TSquareHashTable;
 typedef stdext::hash_map<int, float, TIntHasher> TIntHashTable;
+typedef stdext::hash_map<int, TVector3,TIntHasher> TIntColorHashTable;

@@ -945,6 +945,108 @@ void CMyRenderer::DecomposeLightProbeMap()
 	}
 
 
+float * CMyRenderer::DecomposeLightProbe()
+{   
+	//printf("\n\n\nLight probe is getting compressed in wavelet basis");
+	// roof 
+	CMatrix *RoofLightProbe= new CMatrix(iTransformedLightProbe, KSamplingResolution, KSamplingResolution);	
+	CWavelet *RoofWavelet=new CWavelet(RoofLightProbe,KSamplingResolution,KSamplingResolution);
+
+	//left 
+	CMatrix *LeftLightProbe=new CMatrix(iTransformedLightProbe+KSamplingFaceCoefficients,KSamplingResolution, KSamplingResolution);
+	CWavelet *LeftWavelet=new CWavelet(LeftLightProbe,KSamplingResolution,KSamplingResolution);
+	//front 
+	CMatrix *FrontLightProbe=new CMatrix(iTransformedLightProbe+2*KSamplingFaceCoefficients,KSamplingResolution, KSamplingResolution);
+	CWavelet *FrontWavelet=new CWavelet(FrontLightProbe,KSamplingResolution,KSamplingResolution);
+	//right 
+	CMatrix *RightLightProbe=new CMatrix(iTransformedLightProbe+3*KSamplingFaceCoefficients,KSamplingResolution, KSamplingResolution);
+	CWavelet *RightWavelet=new CWavelet(RightLightProbe,KSamplingResolution,KSamplingResolution);
+	//floor 
+	CMatrix *FloorLightProbe=new CMatrix(iTransformedLightProbe+4*KSamplingFaceCoefficients,KSamplingResolution, KSamplingResolution);
+	CWavelet *FloorWavelet=new CWavelet(FloorLightProbe,KSamplingResolution,KSamplingResolution);
+	//back
+	CMatrix *BackLightProbe=new CMatrix(iTransformedLightProbe+5*KSamplingFaceCoefficients,KSamplingResolution, KSamplingResolution);
+	CWavelet *BackWavelet=new CWavelet(BackLightProbe,KSamplingResolution,KSamplingResolution);
+
+	//wavelet compression of all the faces of the cubemap Lightprobe
+
+	//standard wavelet basis visualisation
+	RoofWavelet->standardDeconstruction();
+	LeftWavelet->standardDeconstruction();
+	FrontWavelet->standardDeconstruction();
+	RightWavelet->standardDeconstruction();
+	FloorWavelet->standardDeconstruction();
+	BackWavelet->standardDeconstruction();
+
+	////non-standard wavelet basis visualisation
+	//RoofWavelet->nonStandardDeconstruction();
+	//LeftWavelet->nonStandardDeconstruction();
+	//FrontWavelet->nonStandardDeconstruction();
+	//RightWavelet->nonStandardDeconstruction();
+	//FloorWavelet->nonStandardDeconstruction();
+	//BackWavelet->nonStandardDeconstruction();
+	//printf("\n\n\n lightprobe faces' wavelets generated");	
+
+	float *f0,*f1,*f2,*f3,*f4,*f5;
+	 f0=RoofWavelet->returnFloat();
+	 f1=LeftWavelet->returnFloat();
+	 f2=FrontWavelet->returnFloat();
+	 f3=RightWavelet->returnFloat();
+	 f4=FloorWavelet->returnFloat();
+	 f5=BackWavelet->returnFloat();
+
+	float *DecomposedLightProbe=new float[KSamplingTotalCoefficients*3];
+	
+		for (int iW=0, endIW=KSamplingFaceCoefficients*3; iW<endIW;iW++)
+		{
+			*(DecomposedLightProbe+iW)=*(f0+iW);
+		}
+		for (int iW=0, endIW=KSamplingFaceCoefficients*3; iW<endIW;iW++)
+		{
+			*(DecomposedLightProbe + iW + KSamplingFaceCoefficients)=*(f1+iW);
+		}
+		for (int iW=0, endIW=KSamplingFaceCoefficients*3; iW<endIW;iW++)
+		{
+			*(DecomposedLightProbe + iW + 2*KSamplingFaceCoefficients)=*(f2+iW);
+		}
+		for (int iW=0, endIW=KSamplingFaceCoefficients*3; iW<endIW;iW++)
+		{
+			*(DecomposedLightProbe + iW + 3*KSamplingFaceCoefficients)=*(f3+iW);
+		}
+		for (int iW=0, endIW=KSamplingFaceCoefficients*3; iW<endIW;iW++)
+		{
+			*(DecomposedLightProbe + iW + 4*KSamplingFaceCoefficients)=*(f4+iW);
+		}
+		for (int iW=0, endIW=KSamplingFaceCoefficients*3; iW<endIW;iW++)
+		{
+			*(DecomposedLightProbe + iW + 5*KSamplingFaceCoefficients)=*(f5+iW);
+		}
+	
+	
+
+
+	delete RoofLightProbe;
+	delete RoofWavelet;
+	delete LeftLightProbe;
+	delete LeftWavelet;
+	delete FrontLightProbe;
+	delete FrontWavelet;
+	delete RightLightProbe;
+	delete RightWavelet;
+	delete FloorLightProbe;
+	delete FloorWavelet;
+	delete BackLightProbe;
+	delete BackWavelet;
+
+	delete []f0;
+	delete []f1;
+	delete []f2;
+	delete []f3;
+	delete []f4;
+	delete []f5;
+
+	return DecomposedLightProbe;
+}
 
 
 // *************	RENDERING METHODS *********** /
@@ -1039,6 +1141,8 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 	TVector3  vx[3];
 	//	TVector3  nv[3];
 	TColorRGBA colors[3];
+	LightProbeWaveletHash();
+	TIntColorHashTable::iterator colorItEnd=iLightProbeWaveletHash.end();
 
 	//CALCULATE VERTEX COLORS
 	if( 1.0 == aMesh->iMaterialColor.iA )
@@ -1054,20 +1158,27 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 #ifdef USE_OPENMP
 #pragma omp parallel for private( index, it, itEnd )
 #endif
+		
 		for (int vertex=0;vertex<vertCount;vertex++)
 			{
 			TColorRGBA color;
 
 			//Browse through the hash
-			it		= aMesh->iVisibilityHash.at(vertex).begin();
-			itEnd	= aMesh->iVisibilityHash.at(vertex).end();
+			//it		= aMesh->iVisibilityHash.at(vertex).begin();
+			//itEnd	= aMesh->iVisibilityHash.at(vertex).end();
+			it      = aMesh->iWaveletHash.at(vertex).begin();
+			itEnd	= aMesh->iWaveletHash.at(vertex).end();
 
 			while( it != itEnd )
 				{
 				index = it->first;
-				color.iR += it->second * (iTransformedLightProbe+index)->iX;
-				color.iG += it->second * (iTransformedLightProbe+index)->iY;
-				color.iB += it->second * (iTransformedLightProbe+index)->iZ;
+				TIntColorHashTable::iterator colorIt= iLightProbeWaveletHash.find(index);
+				if ( colorIt != colorItEnd )
+				{
+					color.iR += it->second * (colorIt->second).iX;//  (iTransformedLightProbe+index)->iX;
+					color.iG += it->second * (colorIt->second).iY;//(iTransformedLightProbe+index)->iY;
+					color.iB += it->second * (colorIt->second).iZ;//(iTransformedLightProbe+index)->iZ;
+				}
 				it++;
 				}
 			//do the averaging
@@ -2258,6 +2369,32 @@ void CMyRenderer::InverseMatrix(float aMatrix[4][4]) const
 				std::swap(aMatrix[k][indxr[l]],aMatrix[k][indxc[l]]);
 		}
 	}
+
+
+void CMyRenderer::LightProbeWaveletHash()
+{
+	float *DecomposedLightProbe=DecomposeLightProbe();
+	
+	TVector3 zero(0.0,0.0,0.0);
+	iLightProbeWaveletHash.clear();
+	
+	for(int coefficient=0,coefCOLOR=0, coefCOLORend=KSamplingTotalCoefficients*3; coefficient<KSamplingTotalCoefficients; coefficient++,coefCOLOR+=3)
+	{
+		TVector3 color( *(DecomposedLightProbe+coefCOLOR),*(DecomposedLightProbe+coefCOLOR+1),*(DecomposedLightProbe+coefCOLOR+2) );
+		//store the non-empty
+
+		//printf("\n %d)",coefficient);
+
+		if( zero != color )
+		{
+			//printf("Color=");
+			//color.print();
+			//TSquare key( 0, 0, coefficient );
+			//printf("\n coeff=%d, value =%f", coefficient,value);
+			iLightProbeWaveletHash.insert( make_pair(coefficient, color) );
+		}
+	}
+}
 
 void CMyRenderer::ShowLightDirection()
 	{
