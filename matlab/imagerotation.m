@@ -46,7 +46,7 @@ for y=1:32
     end
 end
 
-%drawNormals( vec_roof,vec_left,vec_front,vec_right, vec_floor, vec_back, empty );
+drawNormals( vec_roof,vec_left,vec_front,vec_right, vec_floor, vec_back, empty );
 
 %dimensions
 % disp(['roof : ', num2str( vec_roof (1,:) ),' <-> ', num2str( vec_roof (index-1,:) )]); 
@@ -56,7 +56,7 @@ end
 % disp(['floor: ', num2str( vec_floor(1,:) ),' <-> ', num2str( vec_floor(index-1,:) )]); 
 % disp(['back : ', num2str( vec_back (1,:) ),' <-> ', num2str( vec_back (index-1,:) )]); 
 
-for i=0:10:360  
+for i=360:10:360  
     %APPLY ROTATION
     angle = (pi/180)*i;
 
