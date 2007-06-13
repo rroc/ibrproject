@@ -456,7 +456,8 @@ void CMyRenderer::CalculateTransformedLightProbe()
 		if(v>31) v=31;
 		*(iTransformedLightProbe+i) =*(iLightProbe + face + u + v*KSamplingResolution); //*(iLightProbe + static_cast<int>( floorf( vec.iX*KSamplingFaceCoefficients + vec.iY*KSamplingResolution + vec.iZ*vDiff ) )  );
 		}
-	//angle += KDegreeToRadian* 0.5f;
+
+	LightProbeWaveletHash();
 	}
 
 
@@ -1141,7 +1142,7 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 	TVector3  vx[3];
 	//	TVector3  nv[3];
 	TColorRGBA colors[3];
-	LightProbeWaveletHash();
+	//LightProbeWaveletHash();
 	TIntColorHashTable::iterator colorItEnd=iLightProbeWaveletHash.end();
 
 	//CALCULATE VERTEX COLORS
@@ -1154,9 +1155,10 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 		TIntHashTable::iterator itEnd;
 		//THashTable::iterator probeIt;
 		int index(0);
+		TIntColorHashTable::iterator colorIt;
 
 #ifdef USE_OPENMP
-#pragma omp parallel for private( index, it, itEnd )
+#pragma omp parallel for private( index, it, itEnd, colorIt )
 #endif
 		
 		for (int vertex=0;vertex<vertCount;vertex++)
@@ -1169,20 +1171,25 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 			it      = aMesh->iWaveletHash.at(vertex).begin();
 			itEnd	= aMesh->iWaveletHash.at(vertex).end();
 
+			colorIt= iLightProbeWaveletHash.begin();
+
 			while( it != itEnd )
 				{
 				index = it->first;
-				TIntColorHashTable::iterator colorIt= iLightProbeWaveletHash.find(index);
+				//TIntColorHashTable::iterator colorIt= iLightProbeWaveletHash.find(index);
+
 				if ( colorIt != colorItEnd )
-				{
+					{
 					color.iR += it->second * (colorIt->second).iX;//  (iTransformedLightProbe+index)->iX;
 					color.iG += it->second * (colorIt->second).iY;//(iTransformedLightProbe+index)->iY;
 					color.iB += it->second * (colorIt->second).iZ;//(iTransformedLightProbe+index)->iZ;
-				}
+					}
 				it++;
+				colorIt++;
 				}
 			//do the averaging
 			aMesh->iVertexColors.at(vertex) = color/aMesh->iVisibilityHash.at(vertex).size();
+			aMesh->iVertexColors.at(vertex) *= ( sqrtf( 32.0f )*sqrtf( 32.0f ) );
 			}
 		}
 
@@ -1233,6 +1240,9 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 	if ( ValidPRTDataExists( KWaveletDataFileName ) )
 		{
 		LoadPRTWaveletData();
+
+		LightProbeWaveletHash();
+
 		return;
 		} 
 	//OLD DATA TYPE TO NEW ONE
@@ -1272,8 +1282,9 @@ void CMyRenderer::PrecomputedRadianceTransfer()
 		PreCalculateDirectLight();
 		InitVertexMap();
 		InitHashTables();
-		
 		InitWaveletHash();
+
+		LightProbeWaveletHash();
 
 		//SavePRTData();
 		//SavePRTHashData();
@@ -2385,7 +2396,7 @@ void CMyRenderer::LightProbeWaveletHash()
 
 		//printf("\n %d)",coefficient);
 
-		if( zero != color )
+//		if( zero != color )
 		{
 			//printf("Color=");
 			//color.print();

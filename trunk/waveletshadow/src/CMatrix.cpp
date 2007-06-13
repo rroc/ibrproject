@@ -186,12 +186,11 @@ void CMatrix::substitute(CMatrix *aMatrix, int aRow1, int aRow2, int aCol1, int 
 
 void CMatrix::operator /(float a)
 {
-	a=a*1.0;
 	for(int rows=0;rows<iRows; rows++)
 	{
 		for(int cols=0; cols<iCols; cols++)
 		{
-			iMatrix.at(rows).at(cols)/=a;
+			this->iMatrix.at(rows).at(cols)/=a;
 		}
 	}
 }
@@ -199,12 +198,11 @@ void CMatrix::operator /(float a)
 
 void CMatrix::operator *(float a)
 {
-
 	for(int rows=0;rows<iRows; rows++)
 	{
 		for(int cols=0; cols<iCols; cols++)
 		{
-			iMatrix.at(rows).at(cols)*=a;
+			this->iMatrix.at(rows).at(cols)*=a;
 		}
 	}
 }
