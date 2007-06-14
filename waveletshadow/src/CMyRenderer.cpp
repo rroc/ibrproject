@@ -1174,8 +1174,10 @@ void CMyRenderer::RenderObject( CMesh* aMesh )
 				it++;
 				}
 			//de-normalize coefficients dot product
-			color *= KWaveletDescale; 
-			color /= KSamplingTotalCoefficients;
+			//color *= KWaveletDescale; 
+			
+			//averaging
+			//color /= KSamplingTotalCoefficients; 
 
 			//do the averaging
 			aMesh->iVertexColors.at(vertex) = color;
