@@ -54,6 +54,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="glut32.lib glew32.lib glu32.lib opengl32.lib kernel32.lib"
 				GenerateDebugInformation="true"
+				GenerateMapFile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -168,6 +169,36 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\CCubeDecomposition.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\CCubeReconstruction.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\CCubeVectorDecomposition.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\CIcosahedron.cpp"
 				>
 			</File>
@@ -235,6 +266,18 @@
 			</File>
 			<File
 				RelativePath=".\inc\CBox.h"
+				>
+			</File>
+			<File
+				RelativePath=".\inc\CCubeDecomposition.h"
+				>
+			</File>
+			<File
+				RelativePath=".\inc\CCubeReconstruction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\inc\CCubeVectorDecomposition.h"
 				>
 			</File>
 			<File

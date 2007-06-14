@@ -2,6 +2,7 @@
 #define TCOLORRGBA_H
 
 #include "basic.h"
+#include "TVector3.h"
 
 /** \brief RGBA color class
 *
@@ -16,6 +17,9 @@ class TColorRGBA
 			:iR(_r), iG(_g), iB(_b), iA(1){};
 		TColorRGBA(GLfloat _r , GLfloat _g, GLfloat _b, GLfloat _a)
 			:iR(_r), iG(_g), iB(_b), iA(_a){};
+
+		TColorRGBA( const TVector3& aVec )
+			: iR(aVec.iX), iG(aVec.iY), iB(aVec.iZ), iA(1.0f){};
 
 		// Init to gray shade
 		TColorRGBA(float _g)

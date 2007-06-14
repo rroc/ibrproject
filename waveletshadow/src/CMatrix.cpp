@@ -232,9 +232,9 @@ float* CMatrix::returnScaledFloat()
 	{
 		for (int cols=0; cols<iCols;cols++)
 		{
-			( *(p+rows*iCols*3+cols*3) )  = pow(iMatrix.at(rows).at(cols).iX * scale, factor);
-			( *(p+rows*iCols*3+cols*3+1) )= pow(iMatrix.at(rows).at(cols).iY * scale, factor);
-			( *(p+rows*iCols*3+cols*3+2) )= pow(iMatrix.at(rows).at(cols).iZ * scale, factor);
+			( *(p+rows*iCols*3+cols*3  ) ) = pow(iMatrix.at(rows).at(cols).iX * scale, factor);
+			( *(p+rows*iCols*3+cols*3+1) ) = pow(iMatrix.at(rows).at(cols).iY * scale, factor);
+			( *(p+rows*iCols*3+cols*3+2) ) = pow(iMatrix.at(rows).at(cols).iZ * scale, factor);
 		}
 	}
 
@@ -247,11 +247,10 @@ float* CMatrix::returnFloat()
 	{
 		for (int cols=0; cols<iCols;cols++)
 		{
-			( *(p+rows*iCols*3+cols*3) )  = iMatrix.at(rows).at(cols).iX;
-			( *(p+rows*iCols*3+cols*3+1) )= iMatrix.at(rows).at(cols).iY;
-			( *(p+rows*iCols*3+cols*3+2) )= iMatrix.at(rows).at(cols).iZ;
+			( *(p+rows*iCols*3+cols*3  ) ) = iMatrix.at(rows).at(cols).iX;
+			( *(p+rows*iCols*3+cols*3+1) ) = iMatrix.at(rows).at(cols).iY;
+			( *(p+rows*iCols*3+cols*3+2) ) = iMatrix.at(rows).at(cols).iZ;
 		}
 	}
-
 	return p;
 }
