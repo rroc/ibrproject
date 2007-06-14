@@ -16,11 +16,13 @@
 
 #include "CRay.h"
 
+#include "CCubeVectorDecomposition.h"
+
 //CONSTANTS
 static const int KSamplingResolution(32); // this is used as the cubemap resolution ie. (64x64x6)
 static const int KSamplingFaceCoefficients( KSamplingResolution*KSamplingResolution );
 static const int KSamplingTotalCoefficients( KSamplingResolution*KSamplingResolution*6 );
-
+static const int KWaveletDescale(( sqrtf( KSamplingTotalCoefficients ) * sqrtf( KSamplingTotalCoefficients ) ));
 //CLASS DECLARATION
 
 /** \brief Rendering class.
@@ -101,7 +103,7 @@ class CMyRenderer
 		void InitMain();
 		void InitLights();
 		void InitVertexMap();
-		void InitHashTables();
+		//void InitHashTables();
 		void InitWaveletHash();
 
 		//Constructors will call this one
@@ -122,13 +124,11 @@ class CMyRenderer
 
 		float* DecomposeVisibility();
 		float* DecomposeVisibility(int aObject, int aVertexIndex);
-		void LightProbeWaveletHash();
+		void InitLightProbeWaveletHash();
 
 
 		//float* ReconstructVisibility();
-		float* ReconstructVisibility( TIntHashTable* aHash );
-
-
+		void ReconstructVisibility( std::vector<float>* aVisCoefficients, TIntHashTable* aHash );
 
 		void DrawLightSphere();
 
@@ -139,12 +139,12 @@ class CMyRenderer
 		void PreCalculateDirectLight();
 		bool ValidPRTDataExists(string filename);
 		
-		void LoadPRTData();
-		void LoadPRTHashData();
+		//void LoadPRTData();
+		//void LoadPRTHashData();
 		void LoadPRTWaveletData();
 
-		void SavePRTData();
-		void SavePRTHashData();
+		//void SavePRTData();
+		//void SavePRTHashData();
 		void SavePRTWaveletData();
 
 		void TransformMesh( CMesh* aMesh );
@@ -203,6 +203,10 @@ class CMyRenderer
 
 		TVector3* iLightProbe;
 		TIntColorHashTable iLightProbeWaveletHash;
+//		TVector3* iDecomposedLightProbe;
+
+		CCubeVectorDecomposition* iDecomposedLightProbe;
+
 		TVector3* iTransformedLightProbe;
 		int		  iCubeTexture;
 

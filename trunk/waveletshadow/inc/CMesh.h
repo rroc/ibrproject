@@ -60,7 +60,7 @@ class CMesh {
 
 		//per mesh we store (KSamplingResolution*KSamplingResolution*6) floats
 		vector< vector<float> >	iVisibilityCoefficients;
-		vector< TIntHashTable >	iVisibilityHash;
+		//vector< TIntHashTable >	iVisibilityHash;
 		vector< TIntHashTable > iWaveletHash;
 		int iTextureId;
 	};
