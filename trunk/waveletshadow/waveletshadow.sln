@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "soft_shadow", "soft_shadow.vcproj", "{0C02C7B8-08B3-4A59-9224-2DB5AC8C99B4}"
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "waveletshadow", "soft_shadow.vcproj", "{0C02C7B8-08B3-4A59-9224-2DB5AC8C99B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
